@@ -34,12 +34,12 @@
 close all;
 clear all;
 
-addpath('../performance')
-addpath('../inference')
-addpath('../inference/prior/nig')
-addpath('../inference/prior/niw')
-addpath('../inference/prior/pareto')
-addpath('../inference/likelihood/normal')
+addpath('./performance')
+addpath('./inference')
+addpath('./inference/prior/nig')
+addpath('./inference/prior/niw')
+addpath('./inference/prior/pareto')
+addpath('./inference/likelihood/normal')
 
 %addpath('../pareto')
 
