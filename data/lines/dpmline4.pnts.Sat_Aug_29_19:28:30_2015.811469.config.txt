@@ -1,0 +1,68 @@
+# Created by Octave 3.8.2, Sat Aug 29 19:28:31 2015 CEST <anne@six>
+# name: alpha
+# type: scalar
+1
+
+
+# name: hyper
+# type: scalar struct
+# ndims: 2
+ 1 1
+# length: 4
+# name: mu
+# type: matrix
+# rows: 2
+# columns: 1
+ 0
+ 0
+
+
+# name: kappa
+# type: scalar
+0.0001
+
+
+# name: nu
+# type: scalar
+4
+
+
+# name: lambda
+# type: diagonal matrix
+# rows: 2
+# columns: 2
+0.001
+0.001
+
+
+
+
+# name: mu
+# type: matrix
+# rows: 2
+# columns: 3
+ -1.681841080860127 0.9880102835330202 -0.1582737816956521
+ -1.755963236581484 3.679390990259275 0.7663872723703824
+
+
+# name: lp
+# type: matrix
+# rows: 2
+# columns: 3
+ -3.504521637311275 -1.306515006048494 -2.272249859738145
+ 9.365806323729799 9.914283561557543 9.738422899777971
+
+
+# name: sli
+# type: matrix
+# rows: 2
+# columns: 3
+ -2.672492081091956 -7.588342664002708 -4.285806359737318
+ -6.250670206835309 11.1767515772663 0.08805649219948064
+
+
+# name: clusters
+# type: scalar
+3
+
+

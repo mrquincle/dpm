@@ -59,8 +59,15 @@ fprintf('Use prior ''%s''\n', type_prior);
 % Load the dataset
 
 outfname='twolines';
-data_dir='../data/lines';
+data_dir='./data/lines';
 data_glob=[data_dir '/*.data.txt'];
+
+fileList = glob(data_glob);
+
+if (length(fileList) == 0)
+	printf('There are no *.data.txt files in the %s directory\n', data_dir);
+	exit
+end
 
 output_dir='../output';
 if ~exist(output_dir, 'dir')
@@ -71,8 +78,6 @@ timestamp=datestr(now,'yyyy mmm dd HH:MM:SS.FFF');
 timestamp( timestamp == ' ' ) = '_';
 
 output_inference_file=[output_dir '/' outfname '.pnts.' timestamp '.data.txt'];
-
-fileList = glob(data_glob);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set some other configuration options
