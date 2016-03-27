@@ -41,7 +41,7 @@ addpath('../inference/prior/niw')
 addpath('../inference/prior/pareto')
 addpath('../inference/likelihood/normal')
 
-addpath('../pareto')
+%addpath('../pareto')
 
 isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
 
