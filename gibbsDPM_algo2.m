@@ -13,20 +13,8 @@ function c_st = gibbsDPM_algo2(y, hyperG0, alpha, niter, doPlot)
         cmap = colormap;
     end
 
-%    [p, n] = size(y);
     n = size(y,2);
     c_st = zeros(n, niter/2);
-
-    % Reorganize such that assignment to the n'th looks the same no matter the
-    % datastructure
-
-%    if (hyperG0.prior == 'NIW')
-%        U_R.Sigma = zeros(p, p, n);
-%    elseif (hyperG0.prior == 'NIG')
-%        p=p-1; % the y-coordinate doesn't count as dimension
-%        U_R.Sigma = zeros(n);
-%    end
-%    U_R.mu = zeros(p, n);
 
     % U_SS is a structure array where U_SS(k) contains the sufficient
     % statistics associated to cluster k
@@ -37,7 +25,8 @@ function c_st = gibbsDPM_algo2(y, hyperG0, alpha, niter, doPlot)
         U_SS = struct('prior', 'NIG', 'mu', cell(n, 1), 'a', cell(n, 1), 'b', cell(n, 1), 'Lambda', cell(n, 1));
     end
 
-    m=zeros(1,200);
+    % Just reserve enough tables/clusters
+    m = zeros(1,200);
     c = zeros(n, 1);
 
     % Initialisation
@@ -50,18 +39,13 @@ function c_st = gibbsDPM_algo2(y, hyperG0, alpha, niter, doPlot)
             U_SS(c(k)) = update_SS(y(:,k), hyperG0);
         end
     end
+
     % Iterate over the tables (unique indices in customer allocation array c)
+    % to get the first samples for U_R.
     ind = unique(c);
     for j=1:length(ind)
-      % sample_pdfU(U_R, hyperG0, U_SS, ind(j));
         R = sample_pdf(U_SS(ind(j)));
         U_R(ind(j)) = R;
-        %U_R.mu(:, ind(j)) = R.mu;
-        %if (hyperG0.prior == 'NIW')
-        %    U_R.Sigma(:, :, ind(j)) = R.Sigma;
-        %else
-        %    U_R.Sigma(ind(j)) = R.Sigma;
-        %end
     end
 
     % Iterations
@@ -70,6 +54,7 @@ function c_st = gibbsDPM_algo2(y, hyperG0, alpha, niter, doPlot)
         for k=1:n
             % Remove data k from the partition
             m(c(k)) = m(c(k)) - 1;
+	
             U_SS(c(k)) = downdate_SS(y(:,k),U_SS(c(k)));
 
             % Sample allocation of data k
@@ -77,36 +62,29 @@ function c_st = gibbsDPM_algo2(y, hyperG0, alpha, niter, doPlot)
             m(c(k)) = m(c(k)) + 1;
             if m(c(k))>1
                 % There were already data items at this table
+                % Update the sufficient statistics with the new data y(:,k)
                 U_SS(c(k)) = update_SS(y(:,k), U_SS(c(k)));
             else
-                % It is the first item at this table
+                % It is the first item at this table, calculate the sufficient
+                % statistics using the base distribution G0 and the first data
+                % item
                 U_SS(c(k)) = update_SS(y(:,k), hyperG0);
                 % Sample from H_i
                 R = sample_pdf(U_SS(c(k)));
                 U_R(c(k)) = R;
-%                U_R.mu(:, c(k)) = R.mu;
-%                if (hyperG0.prior == 'NIW')
-%                    U_R.Sigma(:, :, c(k)) = R.Sigma;
-%                else
-%                    U_R.Sigma(c(k)) = R.Sigma;
-%                end
             end
 
             if doPlot==1
                 some_plot(y, hyperG0, U_R, m, c, k, i, cmap)
             end
         end
-        % Update cluster locations U
+
+        % Update cluster locations U, we just sample using the sufficient 
+        % statistics U_SS
         ind = find(m);
         for j=1:length(ind)
             R = sample_pdf(U_SS(ind(j)));
             U_R(ind(j)) = R;
-%            U_R.mu(:, ind(j)) = R.mu;
-%            if (hyperG0.prior == 'NIW')
-%                U_R.Sigma(:, :, ind(j)) = R.Sigma;
-%            else
-%                U_R.Sigma(ind(j)) = R.Sigma;
-%            end
         end
 
         if i>niter/2
@@ -120,18 +98,6 @@ function c_st = gibbsDPM_algo2(y, hyperG0, alpha, niter, doPlot)
     end
 end
 
-% Sample pdf and perform some kind of jostling with indices to get into the
-% global mu and sigma arrays
-%function sample_pdfU(U_R, hyperG0, U_SS, table_index)
-%        R = sample_pdf(U_SS(table_index));
-%        U_R.mu(:, table_index) = R.mu;
-%        if (hyperG0.prior == 'NIW')
-%            U_R.Sigma(:, :, table_index) = R.Sigma;
-%        else
-%            U_R.Sigma(table_index) = R.Sigma;
-%        end
-%end
-
 % Sample a new value for a coordinate to a table given an observation z. This
 % can be an existing or new table coordinate. It corresponds to Neal's Eq. 3.6.
 %
@@ -142,12 +108,8 @@ end
 % distribution.
 % The likelihoods are denoted by F(y_i,\theta_c)
 function K = sample_c(m, alpha, z, hyperG0, U_R)
-%function K = sample_c(m, alpha, z, hyperG0, U_mu, U_Sigma)
 
     c = find(m~=0); % gives indices of non-empty clusters
-%    r = sum(m);
-
-    %n = m(c).*likelihoods(hyperG0, repmat(z, 1, length(c)), U_mu(:, c)', U_Sigma(c)' )';
 
     n = m(c).*likelihoods(hyperG0.prior, repmat(z, 1, length(c)), U_R(c) )';
 
@@ -167,14 +129,10 @@ end
 
 function some_plot(z, hyperG0, U_R, m, c, k, i, cmap)
 
+    % If it's 
     if strcmp(hyperG0.prior, 'NIG')
         z=z(2:end,:);
     end
-
-%    for j=1:length(U_R)
-%        U_R(j)
-%        U_mu(j) = U_R(j).mu;
-%    end
 
     ind=find(m);
     hold off;

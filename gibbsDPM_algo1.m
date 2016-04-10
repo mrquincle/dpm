@@ -105,10 +105,14 @@ function [theta_mu_k, theta_Sigma_k] = sample_theta(alpha, z, hyperG0, theta_mu_
     % equation 3.3 in Neal for all j unequal to i (sum in eq. 3.2)
     % n = exp(loggausspdf(repmat(z, 1, p)', theta_mu_notk', theta_Sigma_notk));
     % I transposed sigma here!!
+    % F(y_i, theta_j) for each j
     n = likelihoods(hyperG0, repmat(z, 1, p), theta_mu_notk', theta_Sigma_notk');
     % prediction is A(Y_i) = A_0 integral phi(Y_i-X) G_0(dX) with Y_i the new observation z
+    % integral F(y_i,theta) dG0(theta)
     n0 = pred(z, hyperG0);
     % the denominator, A(Y_i) + sum_l phi(Y_i - X_l) with A(Y_i) = A_0 integral phi(Y_i-X) G_0(dX)
+    % alpha*n0 = alpha * \int F(y_i,theta) dG0
+    % sum(n) = \sum F(y_i, theta_j) 
     const = alpha*n0 +sum(n);
 
     % (sum(n) + alpha*n0)/const = 1
@@ -119,34 +123,34 @@ function [theta_mu_k, theta_Sigma_k] = sample_theta(alpha, z, hyperG0, theta_mu_
     % pick uniform random number between 0 and 1
     u = rand;
     if u<p0
-	% Sample new value
-	% H_i, h(X_i|Y_i) = A_0/A(Y_i) phi(Y_i-X) g_0(X)
-	% but better to first update the hyper parameters given new observation z
+        % Sample new value
+        % H_i, h(X_i|Y_i) = A_0/A(Y_i) phi(Y_i-X) g_0(X)
+        % but better to first update the hyper parameters given new observation z
 
-	% THIS IS CALCULATED MANY TIMES! SHOULD BE STORED IN TABLE
-	hyper = update_SS(z, hyperG0);
-	% and then get X_i given these hyper parameters
-	%[theta_mu_k, theta_Sigma_k] = normalinvwishrnd(hyper);
-	R = sample_pdf(hyper);
-	theta_mu_k = R.mu;
-	theta_Sigma_k = R.Sigma;
+        % THIS IS CALCULATED MANY TIMES! SHOULD BE STORED IN TABLE
+        hyper = update_SS(z, hyperG0);
+        % and then get X_i given these hyper parameters
+        %[theta_mu_k, theta_Sigma_k] = normalinvwishrnd(hyper);
+        R = sample_pdf(hyper);
+        theta_mu_k = R.mu;
+        theta_Sigma_k = R.Sigma;
     else
-	% Sample old value
-	% Remaining part is uniform as well
-	u1 = u - p0;
-	% find normal distribution in n with probabiliy as in Neal equation 3 at top
-	% this is a normal trick to pick something out of an array of probability masses
-	% make the array cumulative and pick then the first item beyond the randomly picked value
-	%cs=cumsum(n/const);
-	%	lastcsshouldbe1minusp0=cs(length(cs)) % should be 1-p0
-	%fprintf('last item in array is indeed 1-p0=%i\n', cs(length(cs)));
-	ind = find(cumsum(n/const)>=u1, 1);
-	theta_mu_k = theta_mu_notk(:, ind);
-	if (hyperG0.prior == 'NIW')
-		theta_Sigma_k = theta_Sigma_notk(:, :, ind);
-	else
-		theta_Sigma_k = theta_Sigma_notk(ind);
-	end
+        % Sample old value
+        % Remaining part is uniform as well
+        u1 = u - p0;
+        % find normal distribution in n with probabiliy as in Neal equation 3 at top
+        % this is a normal trick to pick something out of an array of probability masses
+        % make the array cumulative and pick then the first item beyond the randomly picked value
+        %cs=cumsum(n/const);
+        %	lastcsshouldbe1minusp0=cs(length(cs)) % should be 1-p0
+        %fprintf('last item in array is indeed 1-p0=%i\n', cs(length(cs)));
+        ind = find(cumsum(n/const)>=u1, 1);
+        theta_mu_k = theta_mu_notk(:, ind);
+        if (hyperG0.prior == 'NIW')
+            theta_Sigma_k = theta_Sigma_notk(:, :, ind);
+        else
+            theta_Sigma_k = theta_Sigma_notk(ind);
+        end
     end
 end
 

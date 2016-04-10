@@ -21,7 +21,11 @@
 %   hyperG0.a = 10;
 %   hyperG0.b = 0.1;
 %   hyperG0.Lambda = [ 1 0.5; 0.1 1];
-% Likewise it is possible to define a hyperG0.prior = 'NIW' prior.
+% Likewise it is possible to define a hyperG0.prior = 'NIW' prior. This can be
+% used as a prior for a Gaussian mixture model. The hyperG0.prior = 'DPM_Seg'
+% can be used as a prior for line segments. A combination of Gaussian noise
+% across on top of a linear relation combined with a Pareto distribution 
+% restricting the line to a segment only.
 %
 % There are different MCMC algorithms implemented. These can be tested through
 % setting the variable type_algo. The options tested for all cases are
@@ -52,6 +56,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set the prior to use
 prior = {'NIW'; 'NIG'; 'DPM_Seg'};
+% Select the prior by picking an index of 1 or higher.
 type_prior=prior{3};
 fprintf('Use prior ''%s''\n', type_prior);
 
@@ -69,7 +74,7 @@ if (length(fileList) == 0)
 	exit
 end
 
-output_dir='../output';
+output_dir='./output';
 if ~exist(output_dir, 'dir')
 	mkdir(output_dir);
 end
@@ -104,6 +109,10 @@ alpha = 1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The inference method
+% The BMQ or CRP method can be used for linear regression. The BMQ is not 
+% converging so fast though. The collapsedCRP method or the slicesampler 
+% I haven't used. The auxiliaryvars method needs to be used for the DPM_Seg
+% classifier.
 algorithm = {'BMQ'; 'CRP'; 'collapsedCRP'; 'slicesampler'; 'auxiliaryvars'};
 type_algo = algorithm{5};
 fprintf('Use algorithm ''%s''\n', type_algo);
@@ -124,8 +133,7 @@ fprintf(fid, 'type_algo:\n%s\n', type_algo);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % We perform inference over a list of datasets
 
-%for f = 1:length(fileList)
-for f = 2:2
+for f = 1:length(fileList)
 
 	% Clear all variables when we get a new dataset, except for the ones we
 	% define here: the output file name, prior type, number of iterations,
