@@ -89,7 +89,7 @@ output_inference_file=[output_dir '/' outfname '.pnts.' timestamp '.data.txt'];
 
 % Number of iterations
 niter = 1000;
-%niter = 200;
+niter = 200;
 
 % Type of plots (plot at every Gibbs step, or only after each point is updated)
 doPlot = 2;
@@ -104,6 +104,8 @@ findMAP = 0;
 % The most important parameter in a DPM is the scale or concentration parameter
 % called alpha. With a small alpha we will have only a few clusters. With alpha
 % very large we will have many clusters.
+% It is also possible to perform inference over this hyperparameter and 
+% postulate an (improper) prior for alpha. We won't do that in this code.
 alpha = 1;
 %alpha = 0.1;
 

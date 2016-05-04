@@ -1,8 +1,28 @@
 % -- Function: likelihoods(method, data, R)
-%     The type of likelihood is indicated through method
+%     The type of likelihood is indicated through the "method" parameter.
 %     The data itself is ordered in such way that it can be compared one-on-one
 %     with the entries in R. So, parameters R(1) need to be compared with
-%     data(:,1)
+%     data(:,1).
+%     Array parameters R(i).mu are reshaped to a single matrix mu(i). The same
+%     for R(i).Sigma, etc.
+%     If there is only a singular R(1).mu element, this element will be copied 
+%     for each data point.
+%
+% Supported likelihood functions:
+%     method='NIW' uses a Normal Inverse Wishart as prior and has a Gaussian 
+%       likelihood. Given the data it will calculate the Gaussian distance 
+%       between the data and (mu,Sigma) as defined in R. Note, that this method
+%       seamlessly handles multiple Gaussians. R should be heterogeneous in 
+%       such a case.
+%     method='NIG' uses a Normal Inverse Gamma as prior and has a Gaussian
+%       likelihood defined with respect to the distance between y-coordinates
+%       and the predictor vector x (or design matrix X) times the searched 
+%       for beta vector (line parameter vector).
+%       In ridge regression Ax=b, the y coordinates are b, the x-coordinates
+%       (enriched with a ones-column) are A. The variable we're after is x.
+%     method='DPM_Seg' has a similar Gaussian likelihood for the line 
+%       parameters, projects this line on the x-axis and defines a uniform
+%       distribution between a and b.
 function n = likelihoods(method, data, R)
 	switch(method)
 	case 'NIW'
@@ -11,7 +31,7 @@ function n = likelihoods(method, data, R)
 		if (size(mu,1)==1)
 			copies=size(data, 2);
 			if (copies ~= 1)
-				% expand mu, Sigma, a, and b to fit data
+				% expand mu, Sigma to fit data
 				mu = repmat(mu, copies, 1);
 				Sigma = repmat(Sigma, copies, 1);
 			end
@@ -23,7 +43,7 @@ function n = likelihoods(method, data, R)
 		if (size(mu,1)==1)
 			copies=size(data, 2);
 			if (copies ~= 1)
-				% expand mu, Sigma, a, and b to fit data
+				% expand mu, Sigma to fit data
 				mu = repmat(mu, copies, 1);
 				Sigma = repmat(Sigma, copies, 1);
 			end

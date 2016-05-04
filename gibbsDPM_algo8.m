@@ -55,7 +55,7 @@ function c_st = gibbsDPM_algo8(y, hyperG0, alpha, niter, doPlot)
                 U_SS(c(k)) = update_SS(y(:,k), hyperG0);
             end
         case 'DPM_Seg'
-             % Nothing to do...
+             % Nothing to do..., there are no sufficient statistics
         otherwise
         end
     end
@@ -131,15 +131,16 @@ end
 
 % This is another MCMC update.
 % 1.) In the first implementation I used a random walk method (brownian) to 
-% update the parameter values and subsequently admit them via an MH step. 
-% 2.) I even experimented with multiple walkers in parallel (not tested).
+% update the parameter values and subsequently allow for them with an alpha
+% acceptance ratio as an MH step. 
+% 2.) I also experimented with multiple walkers in parallel (not tested).
 % 3.) But probably what I should've done is just sampling from the prior.
 % This is slower though. Dahl in "Sequentially-Allocated Merge-Split
 % Sampler for Conjugate and Nonconjugate Dirichlet Process Mixture Models"
 % (2005) goes for the random walk.
 function [dR] = update_c(m, alpha, z, hyperG0, U_R, c)
     % set the default sampling method
-    sampling_method='prior';
+    sampling_method='random_walk';
     cind=find(m);
     % copy to result vector (will be overwritten in accept-reject step)
     dR = U_R;
