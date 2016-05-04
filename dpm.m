@@ -24,7 +24,7 @@
 % Likewise it is possible to define a hyperG0.prior = 'NIW' prior. This can be
 % used as a prior for a Gaussian mixture model. The hyperG0.prior = 'DPM_Seg'
 % can be used as a prior for line segments. A combination of Gaussian noise
-% across on top of a linear relation combined with a Pareto distribution 
+% across on top of a linear relation combined with a Pareto distribution
 % restricting the line to a segment only.
 %
 % There are different MCMC algorithms implemented. These can be tested through
@@ -50,7 +50,7 @@ addpath('./inference/likelihood/normal')
 isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
 
 if ~isOctave
-	addpath('../octave-matlab')
+	addpath('./matlab-helper-functions')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -104,15 +104,15 @@ findMAP = 0;
 % The most important parameter in a DPM is the scale or concentration parameter
 % called alpha. With a small alpha we will have only a few clusters. With alpha
 % very large we will have many clusters.
-% It is also possible to perform inference over this hyperparameter and 
+% It is also possible to perform inference over this hyperparameter and
 % postulate an (improper) prior for alpha. We won't do that in this code.
 alpha = 1;
 %alpha = 0.1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The inference method
-% The BMQ or CRP method can be used for linear regression. The BMQ is not 
-% converging so fast though. The collapsedCRP method or the slicesampler 
+% The BMQ or CRP method can be used for linear regression. The BMQ is not
+% converging so fast though. The collapsedCRP method or the slicesampler
 % I haven't used. The auxiliaryvars method needs to be used for the DPM_Seg
 % classifier.
 algorithm = {'BMQ'; 'CRP'; 'collapsedCRP'; 'slicesampler'; 'auxiliaryvars'};
