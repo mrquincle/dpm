@@ -11,86 +11,109 @@ addpath('../inference/likelihood/normal');
 
 method='DPM_Seg';
 
-test_mu=false;
-test_b=true;
+test_mu=true;
+test_b=false;
 
 max_x_axis=20;
 max_y_axis=20;
 
-N=100;
+% number of test cases
+N=3;
 
 % Default line parameters	
-mu0=[5 2];
+mu0 = [0 1];
+b0 = 10;
 
 if (test_mu)
+    % create ground truth
+    truth.mu = repmat(mu0, N, 1)';
+    truth.b = repmat(b0, N, 1)';
+
 	% Different line parameters to test
-	mu1=[1 2.1];
-	mu2=[2 3];
-	mu=[mu0' mu1' mu2'];
-else
-	mu=repmat(mu0, N, 1)';
+	mu1=[7.5 0.001];
+	mu2=[-1500+7.5 200];
+	test.mu=[mu0' mu1' mu2'];
+    test.b = truth.b;
 end
 
 if (test_b)
+    N = 100;
+    % create ground truth
+    truth.mu = repmat(mu0, N, 1)';
+    truth.b = repmat(b0, N, 1)';
+
 	% test b in particular, the end of the line segment
 	x_inc=max_x_axis/N;
-	b_test=0:x_inc:max_x_axis-x_inc;
-	b_test=b_test+x_inc;
+	test.b=0:x_inc:max_x_axis-x_inc;
+	test.b=test.b+x_inc;
+    test.mu = truth.mu;
 end
-
-N=length(mu);
 
 % create x between a0 and b0
 a0=5;
 b0=10;
-x=rand(1,1)*a0+b0-a0;
-printf("The x generated between (%i,%i) is %i\n", a0, b0, x);
+%x=rand(1,3)*a0+b0-a0;
+x=[0.25 0.5 0.75]*a0+b0-a0;
+%printf("The x generated between (%i,%i) is %i\n", a0, b0, x);
 % repeat this random value for all lines
-x=repmat(x, 1, N);
+%x=repmat(x, 1, N);
 % append with ones, so it can be multiplied with the mu's
 X=[ones(1,N);x];
 
 % assume the method calculates the optimal mu, then use this to come up with
 % y, and measure if this indeed corresponds with the likelihood expectations
-y=sum(X.*mu,1);
+
+y=sum(X.*truth.mu,1);
 
 % collect total data, to be used in algorithm
-data=[X; y];
+test.data=[X; y];
 
 clear R
 for i = 1:N
-	R(i).mu = mu(:,1);
+	R(i).mu = test.mu(:,i);
 	R(i).Sigma = 0.1;
+	%R(i).a=a0;
+    %R(i).b=test.b(i);
 	R(i).a=0;
-	R(i).b=b_test(i);
+    R(i).b=15;
 end
 
-% show the line going from [0,10] on the x-axis and having the corresponding
-% y-coordinates derived via mu0
-
-% calculate X0=0 and Xn=10
-x0=0; xn=10;
-X0=[1;x0]; 
-Xn=[1;xn];
-y0=sum(X0.*mu0',1);
-yn=sum(Xn.*mu0',1);
+% show the line going from [a0,b0] on the x-axis and having the corresponding
+% y-coordinates derived for different mu
 subplot(2,1,1)
-plot([x0, xn], [y0, yn]);
-axis([0 20], [0 20]);
-hold on;
+for i = 1:N
+    x0=a0; xn=b0;
+    X0=[1;x0]; 
+    Xn=[1;xn];
+    y0=sum(X0.*test.mu(:,i),1);
+    yn=sum(Xn.*test.mu(:,i),1);
+
+    plot([x0, xn], [y0, yn]);
+    axis([0, 20, 0, 20]);
+    hold on;
+end
 
 % point x
-xp=X(2,1);
-yp=y(1);
-plot(xp, yp, 'o');
+for i = 1:N
+    xp=X(2,i);
+    yp=y(i);
+    plot(xp, yp, 'o');
+end
 
 % calculate the likelihoods with the given data
-n=likelihoods(method, data, R);
+n=likelihoods(method, test.data, R);
 
 % show in the second plot the likelihood with b_test
 subplot(2,1,2);
 
-plot(b_test', n, 'r');
+if (test_mu)
+    n
+end
+
+if (test_b)
+    axis([0, 20, 0, 20]);
+    plot(b_test', n, 'r');
+end
 
 hold off;
 %b=waitforbuttonpress();

@@ -1,4 +1,4 @@
-% Downdate sufficient statistics S with new data z
+% Downdate sufficient statistics S with data z
 %
 % -- Function: R = downdate_SS(z, S)
 %     The data can be just observations itself or in the case of a regression
@@ -16,6 +16,8 @@ function R = downdate_SS(z, S)
 		R = niwdowndate(z, S);
 	case 'NIG'
 		R = nigdowndate(z, S);
+    case 'DPM_Seg'
+        error('Sufficient statistics is assumed to be max(x_i) and when deleting z it cannot be known what the new max(x_i) should be');
 	otherwise
 		error('Unknown type of prior');
 	end

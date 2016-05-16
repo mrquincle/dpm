@@ -7,6 +7,8 @@
 %     Currently supported S.prior:
 %      * 'NIW', a Normal inverse Wishart distribution
 %      * 'NIG', a Normal inverse Gamma distribution
+%      * 'Par', a Pareto distribution
+%      * 'DPM_Seg', a Pareto-NIG distribution
 %     Returns R, the updated sufficient statistics.
 %
 function R = update_SS(z, S)
@@ -15,6 +17,11 @@ function R = update_SS(z, S)
 		R = niwupdate(z, S);
 	case 'NIG'
 		R = nigupdate(z, S);
+    case 'Par'
+        R = paretoupate(z, S);
+    case 'DPM_Seg'
+        T = nigupdate(z, S);
+        R = paretoupdate(z, T);
 	otherwise
 		error('Unknown type of prior');
 	end

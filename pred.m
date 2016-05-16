@@ -41,6 +41,16 @@ function out = pred(z, S)
 		nu = 2*S.a;
 		XGX=X' * S.Lambda * X;
 		out = mvtpdf(y, X'*S.mu, S.b / S.a * (eye(size(XGX)) + XGX), nu);
+    case 'DPM_Seg_disable'
+		% p(z*|Z) = Student_nu(X*mu, b/a(I + X Gamma^-1 X))
+		% all z are summarized through sufficient statistics, so we need only
+		% p(z*|ss) and here z* consists of y* and X*
+		y=z(end,:);
+		X=z(1:end-1,:);
+		nu = 2*S.a;
+		XGX=X' * S.Lambda * X;
+		out = mvtpdf(y, X'*S.mu, S.b / S.a * (eye(size(XGX)) + XGX), nu);
+
 	otherwise
 		error('Unknown type of prior');
 	end

@@ -1,9 +1,13 @@
 % generate samples on a line and get endpoints
 
+addpath('../inference')
+addpath('../inference/prior/pareto')
+
 lb=-4;
 hb=5;
 sample_cnt=100;
-sample_sub_cnt = [1 3 10 sample_cnt];
+%sample_sub_cnt = [1 3 10 sample_cnt];
+sample_sub_cnt = [2 50 75 sample_cnt];
 emp_sigma=0.5;
 avg=4.5;
 
@@ -20,11 +24,13 @@ alpha=10;
 
 endpoint_cnt=10;
 
-fh=figure(1);
+fignr=0;
 
-infer_normal_distribution_with_known_variance=true;
+infer_normal_distribution_with_known_variance=false;
 
 if (infer_normal_distribution_with_known_variance)
+    fignr = fignr + 1;
+    fh=figure(1);
 
 	% priors, these are now sampled from a Normal distribution
 	% if they are small, they are noninformative, if they are large they will
@@ -92,10 +98,14 @@ end
 pA = -.20;
 pB = .20;
 
-fg=figure(2);
+clf('reset');
 
-for p=1:4
-	subplot(2,2,p);
+fignr = fignr + 1;
+fg=figure(fignr);
+
+for p=1:2
+	h = subplot(1,2,p);
+%	subplot(2,2,p);
 
 	ssc=sample_sub_cnt(p);
 
@@ -114,13 +124,34 @@ for p=1:4
 	% with b = max(m,pb) and a = min(m,pa)
 	[S0 S1] = rnd_pair_two_sided_pareto(A, B, alpha, ssc, 1, endpoint_cnt);
 
-	plot(S, Z, 'b*');
+	plot(S, Z, 'b.', 'markersize', 20);
 	hold on;
-	plot(S0, 0, 'r.');
-	plot(S1, 0, 'g.');
+	plot(S0, 0, 'r.', 'markersize', 20);
+	plot(S1, 0, 'g.', 'markersize', 20);
 	axis(axis_limits);
+
+    % shift everything a bit down
+    p = get(h, 'Position');
+    set(h, 'Position', [p(1) p(2)-0.02 p(3) p(4)]);
+
 	hold off;
 end
+
+W = 7; H = 3;
+set(fg,'PaperUnits','inches')
+set(fg,'PaperOrientation','portrait');
+set(fg,'PaperSize',[H,W])
+set(fg,'PaperPosition',[0,0,W,H])
+
+%ha = axes('Position', [0 0 1 1], 'Xlim', [0 1], 'Ylim', [0 1], 'Box', 'off', 'Visible', 'off', 'Units', 'normalized', 'clipping', 'off');
+%text(0.5, 0.98,'Update of Pareto distribution after observations','HorizontalAlignment','center','VerticalAlignment', 'top')
+
+FN = findall(fg,'-property','FontName');
+set(FN,'FontName','/usr/share/fonts/dejavu/DejaVuSerifCondensed.ttf');
+FS = findall(fg,'-property','FontSize');
+set(FS,'FontSize',12);
+
+saveas(1, "presentation.png");
 
 % but what we actually want to do is to define a prior instead of just
 % sampling from a Pareto distribution

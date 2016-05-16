@@ -1,10 +1,19 @@
-file=${1:? "usage: file"}
-< "$file" grep RI -A 3 | egrep '0|1' > ri.avg.txt
-< "$file" grep AR -A 3 | egrep '0|1' > ar.avg.txt
-< "$file" grep MI -A 3 | egrep '0|1' > mi.avg.txt
-< "$file" grep HI -A 3 | egrep '0|1' > hi.avg.txt
+#!/bin/sh
 
-wc -l ri.avg.txt
-wc -l ar.avg.txt
-wc -l mi.avg.txt
-wc -l hi.avg.txt
+file=${1:? "usage: file output-path"}
+opath=${2:? "usage: file output-path"}
+
+mkdir -p $opath
+
+# old format is 3, new is 1
+format=3
+
+< "$file" grep RI -A $format | egrep '0|1' > $opath/ri.avg.txt
+< "$file" grep AR -A $format | egrep '0|1' > $opath/ar.avg.txt
+< "$file" grep MI -A $format | egrep '0|1' > $opath/mi.avg.txt
+< "$file" grep HI -A $format | egrep '0|1' > $opath/hi.avg.txt
+
+wc -l $opath/ri.avg.txt
+wc -l $opath/ar.avg.txt
+wc -l $opath/mi.avg.txt
+wc -l $opath/hi.avg.txt

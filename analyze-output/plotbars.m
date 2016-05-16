@@ -1,16 +1,23 @@
 stat=zeros(4,4);
 
+path='aug-30/';
+%path='may-04/';
+
+plot_title = 'Clustering performance of line detection algorithm'
+
 for i=1:4
 	switch(i)
 	case 1
-		suc=importdata('output/ri.avg.txt');
+		suc=importdata(strcat(path,'ri.avg.txt'));
 	case 2
-		suc=importdata('output/ar.avg.txt');
+		suc=importdata(strcat(path,'ar.avg.txt'));
 	case 3
-		suc=importdata('output/mi.avg.txt');
+		suc=importdata(strcat(path,'mi.avg.txt'));
 	case 4
-		suc=importdata('output/hi.avg.txt');
+		suc=importdata(strcat(path,'hi.avg.txt'));
 	end
+
+    suc
 
 	stat(i,1)=i;
 	avgsuc=mean(suc);
@@ -31,5 +38,7 @@ stat
 errorbar(stat(:,1), stat(:,2), stat(:,3), stat(:,4), '#~.r')
 ylim([0, 1]);
 set(gca,'XTickLabel',{'','Rand Index', 'Adjusted Rand', 'Mirkin', 'Hubert'})
-title("Clustering performance of Algorithm 1 using several metrics")
-legend("Average performance");
+title(plot_title);
+legend('Average performance');
+
+print -dpng barplot.png

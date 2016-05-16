@@ -1,5 +1,8 @@
 % Plots the probability density function of the Pareto distribution
 
+addpath('../inference')
+addpath('../inference/prior/pareto')
+
 alpha=5;
 N=1000;
 lambda_r=2;

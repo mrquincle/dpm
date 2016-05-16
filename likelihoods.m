@@ -96,7 +96,12 @@ function n = likelihoods(method, data, R)
 		% points being on the segment
 		% we swap a and b if a is larger than b, because we don't care
 		% which endpoint is which
+
+        % likelihood is nonzero if the point falls on the line, zero if 
+        % it does not. There is no "punishment" if the point is far from
+        % both end points
 		n1 = unifpdfN(Xr, a, b);
+
 		% combine the likelihood, if points do not fall on segment we
 		% have n1 equal to 0, and want the result to be 0
 		n = n0 .* n1;
