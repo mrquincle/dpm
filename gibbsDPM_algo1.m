@@ -14,10 +14,14 @@ function c_st = gibbsDPM_algo1(P, hyperG0, alpha, niter, doPlot)
     [p, n] = size(P);
     c_st = zeros(n, niter/2);
 
-    if (hyperG0.prior == 'NIW')
+    switch (hyperG0.prior)
+    case 'NIW'
         theta_Sigma = zeros(p, p, n);
-    elseif (hyperG0.prior == 'NIG')
+    case 'NIG'
         p=p-1; % the y-coordinate doesn't count as dimension
+        theta_Sigma = zeros(n);
+    case 'DPM_Seg'
+        p=p-1;
         theta_Sigma = zeros(n);
     end
     theta_mu = zeros(p, n);
@@ -113,7 +117,7 @@ function [theta_mu_k, theta_Sigma_k] = sample_theta(alpha, z, hyperG0, theta_mu_
     n0 = alpha*pred(z, hyperG0);
     % the denominator, A(Y_i) + sum_l phi(Y_i - X_l) with A(Y_i) = A_0 integral phi(Y_i-X) G_0(dX)
     % alpha*n0 = alpha * \int F(y_i,theta) dG0
-    % sum(n) = \sum F(y_i, theta_j) 
+    % sum(n) = \sum F(y_i, theta_j)
     const = n0 + sum(n);
 
     % (sum(n) + alpha*n0)/const = 1

@@ -45,8 +45,6 @@ addpath('./inference/prior/niw')
 addpath('./inference/prior/pareto')
 addpath('./inference/likelihood/normal')
 
-%addpath('../pareto')
-
 isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
 
 if ~isOctave
@@ -117,6 +115,7 @@ alpha = 1;
 % classifier.
 algorithm = {'BMQ'; 'CRP'; 'collapsedCRP'; 'slicesampler'; 'auxiliaryvars'};
 type_algo = algorithm{5};
+type_algo = algorithm{1};
 fprintf('Use algorithm ''%s''\n', type_algo);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -197,6 +196,7 @@ for f = 1:length(fileList)
 		hyperG0.a = 10; % > 0
 		hyperG0.b = 0.1;
 		hyperG0.Lambda = [ 1 0.5; 0.1 0.8];
+%		hyperG0.Lambda = [ 1 0.2; 0.1 1]*0.02;
 		% Hyper parameters for the Pareto priors
 		hyperG0.p_a = -1;
 		hyperG0.p_b = 1;
