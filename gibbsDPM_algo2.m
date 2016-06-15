@@ -55,7 +55,7 @@ function c_st = gibbsDPM_algo2(y, hyperG0, alpha, niter, doPlot)
             % Remove data k from the partition
             m(c(k)) = m(c(k)) - 1;
 	
-            U_SS(c(k)) = downdate_SS(y(:,k),U_SS(c(k)));
+            U_SS(c(k)) = downdate_SS(y, k, U_SS(c(k)));
 
             % Sample allocation of data k
             c(k) = sample_c(m, alpha, y(:,k), hyperG0, U_R);
@@ -63,12 +63,12 @@ function c_st = gibbsDPM_algo2(y, hyperG0, alpha, niter, doPlot)
             if m(c(k))>1
                 % There were already data items at this table
                 % Update the sufficient statistics with the new data y(:,k)
-                U_SS(c(k)) = update_SS(y(:,k), U_SS(c(k)));
+                U_SS(c(k)) = update_SS(y, k, U_SS(c(k)));
             else
                 % It is the first item at this table, calculate the sufficient
                 % statistics using the base distribution G0 and the first data
                 % item
-                U_SS(c(k)) = update_SS(y(:,k), hyperG0);
+                U_SS(c(k)) = update_SS(y, k, hyperG0);
                 % Sample from H_i
                 R = sample_pdf(U_SS(c(k)));
                 U_R(c(k)) = R;

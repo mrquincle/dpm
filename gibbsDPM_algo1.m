@@ -14,14 +14,10 @@ function c_st = gibbsDPM_algo1(P, hyperG0, alpha, niter, doPlot)
     [p, n] = size(P);
     c_st = zeros(n, niter/2);
 
-    switch (hyperG0.prior)
-    case 'NIW'
+    if (hyperG0.prior == 'NIW')
         theta_Sigma = zeros(p, p, n);
-    case 'NIG'
+    elseif (hyperG0.prior == 'NIG')
         p=p-1; % the y-coordinate doesn't count as dimension
-        theta_Sigma = zeros(n);
-    case 'DPM_Seg'
-        p=p-1;
         theta_Sigma = zeros(n);
     end
     theta_mu = zeros(p, n);
@@ -103,6 +99,10 @@ end
 % TODO: replace theta_mu_notk and theta_Sigma_notk by variable theta.mu_notk and theta.Sigma_notk
 function [theta_mu_k, theta_Sigma_k] = sample_theta(alpha, z, hyperG0, theta_mu_notk, theta_Sigma_notk)
     % number of items (grows to number of data points with initialization and stays at N-1)
+    p = size(theta_mu_notk, 2);
+
+    % q_ij, calculate b F(y_i,theta_j) for all items in the sum (except j)
+    % equation 3.3 in Neal for all j unequal to i (sum in eq. 3.2)
     p = size(theta_mu_notk, 2);
 
     % q_ij, calculate b F(y_i,theta_j) for all items in the sum (except j)
@@ -212,7 +212,3 @@ function some_plot(zt, theta_mu, theta_Sigma, k, i, n, cmap)
     title(['i=' num2str(i) ',  k=' num2str(k) ', Nb of clusters: ' num2str(length(ind))]);
     xlabel('X')
     ylabel('Y')
-    xlim([-1 1]*20);
-    ylim([-1 1]*20);
-    pause(.01)
-end

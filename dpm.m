@@ -198,9 +198,9 @@ for f = 1:length(fileList)
 		hyperG0.Lambda = [ 1 0.5; 0.1 0.8];
 %		hyperG0.Lambda = [ 1 0.2; 0.1 1]*0.02;
 		% Hyper parameters for the Pareto priors
-		hyperG0.p_a = -1;
-		hyperG0.p_b = 1;
-		hyperG0.p_alpha = 3;
+		hyperG0.par.a = -1;
+		hyperG0.par.b = 1;
+		hyperG0.par.alpha = 3;
 		% Hyper parameter for shift on x-axis
 		hyperG0.shift.mu = 0;
 		hyperG0.shift.kappa = 0.05;

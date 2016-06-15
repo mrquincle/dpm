@@ -11,8 +11,9 @@ sample_sub_cnt = [2 50 75 sample_cnt];
 emp_sigma=0.5;
 avg=4.5;
 
-lim = 10;
-axis_limits=[-lim, +lim, -lim, +lim];
+xlim = 10;
+ylim = 5;
+axis_limits=[-xlim, +xlim, -ylim, +ylim];
 
 X=unifrnd(lb, hb, 1, sample_cnt);
 
@@ -137,7 +138,7 @@ for p=1:2
 	hold off;
 end
 
-W = 7; H = 3;
+W = 14; H = 3;
 set(fg,'PaperUnits','inches')
 set(fg,'PaperOrientation','portrait');
 set(fg,'PaperSize',[H,W])
@@ -151,7 +152,7 @@ set(FN,'FontName','/usr/share/fonts/dejavu/DejaVuSerifCondensed.ttf');
 FS = findall(fg,'-property','FontSize');
 set(FS,'FontSize',12);
 
-saveas(1, "presentation.png");
+saveas(1, "pareto_update.png");
 
 % but what we actually want to do is to define a prior instead of just
 % sampling from a Pareto distribution
