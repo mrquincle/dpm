@@ -1,8 +1,11 @@
 % Run MCMC to generate samples from a probability density function. 
 
-% Here we can use the mvnpdfK function that knows for each data point x, the probability p which with it occurs.
-% We now like to start with this pdf and generate data points x. In other words, MCMC is used to get the 
-% function mvnrndK using mvnpdfK as input.
+% Suppose we have data generated from a multimodal multivariate normal 
+% distribution, mm_mvnpdf, then there are two possible problems to solve:
+%
+% 1.) Figuring out how to generate samples from such a distribution. 
+%
+% 2.) From observations infer the corresponding means.
 
 clear all
 clear
@@ -10,15 +13,12 @@ clf
 
 addpath("likelihood")
 addpath("pdf")
+addpath("helpers")
 
 load pattern100_sigma0_1.data dataset K
 
 limit_min=0;
 limit_max=12;
-
-%data = cat(1, dataset.data);
-%control.mu = cat(1, dataset.mu);
-%control.sigma = cat(1, dataset.sigma);
 
 % Create structures in form {:,:,k}
 % Assume that each cluster has the same number of data points
@@ -53,7 +53,7 @@ stddev_scale = stddev_scale_0;
 
 K
 % With around T=10,000 we find maybe a third of the modes. With T=50,000 we find the majority.
-T=10000;
+T=50000;
 
 prob_walk = zeros(T+1, 1);
 
@@ -61,6 +61,7 @@ state_init = zeros(1, 2);
 state_dim = size(state_init);
 
 if (perform_inference)
+	% State exists out of K mean variables (each in 2D)
 	state_walk = zeros(2,K,T+1);
 
 	% Let's assume a window, 10x10 positive quadrant, and sample uniformly from it for the means
@@ -77,8 +78,10 @@ if (perform_inference)
 	% for each set of data that belongs to a cluster
 
 	%prob_walk(1) = mvnpdf_likelihood_multiple_mu(data, state_walk(:,:,1), control.sigma);
-	prob_walk(1) = mvnpdf_mixture_mu(data, state_walk(:,:,1), sigma);
+%	prob_walk(1) = mvnpdf_mixture_mu(data, state_walk(:,:,1), sigma);
+	prob_walk(1) = sum(mm_mvnpdf(data, state_walk(:,:,1), sigma));
 else
+	% State exists out of single data points (2D)
 	state_walk = zeros(1,2,T+1);
 
 	% Just single random vector
@@ -122,7 +125,7 @@ if (use_structure)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 	if (perform_inference)
-		state_walk = mode_samples_rnd(Tmodes, @mvnpdf_likelihood_multiple_mu, data, control.sigma);
+		state_walk = mode_samples_rnd(Tmodes, @sum_function, @mm_mvnpdf, data, control.sigma);
 	else
 		state_walk = mode_samples_rnd(Tmodes, @mm_mvnpdf, mu, sigma);
 	end
@@ -178,9 +181,9 @@ for t = 1:T
 		% big step only once every step
 		if (rand > big_jump_probability)
 			% we pick one randomly in structure_proposal_pdf
-			topr = randi(length(structure_proposal_pdf));
+			pick_r = randi(length(structure_proposal_pdf));
 
-			proposal_pdf = proposal_pdf + structure_proposal_pdf(topr,:); 
+			proposal_pdf = proposal_pdf + structure_proposal_pdf(pick_r,:); 
 		end
 	else
 		% we can use a standard random generator

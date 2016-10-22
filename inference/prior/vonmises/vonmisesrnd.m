@@ -18,15 +18,14 @@
 %  * Sample x from a normal distribution with mean \mu and variance \sigma^2/\lambda
 
 function x = vonmisesrnd(S, N)
-	if ~exist('N','var')
-		N=1;
-	end
+    x = vmrnd(S.MU, S.K, N);
+%	if ~exist('N','var')
+%		N=1;
+%	end
 
     % for K approaching zero, sample uniform from [0, 2pi]
-    if (S.K < 1e-6) 
-        x = 2*pi*rand(N,1);
-        return;
-    end
-
-
+ %   if (S.K < 1e-6) 
+  %      x = 2*pi*rand(N,1);
+   %     return;
+    %end
 end

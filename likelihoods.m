@@ -23,7 +23,7 @@
 %     method='DPM_Seg' has a similar Gaussian likelihood for the line 
 %       parameters, projects this line on the x-axis and defines a uniform
 %       distribution between a and b.
-function n = likelihoods(method, data, R)
+function res = likelihoods(method, data, R, verbose=false)
 	switch(method)
 	case 'NIW'
 		mu = reshape([R.mu],size(R(1).mu, 1), size(R(1).mu, 2) * length(R))';
@@ -36,7 +36,7 @@ function n = likelihoods(method, data, R)
 				Sigma = repmat(Sigma, copies, 1);
 			end
 		end
-		n = exp(loggausspdf(data, mu, Sigma));
+		res = exp(loggausspdf(data, mu, Sigma));
 	case 'NIG'
 		mu = reshape([R.mu],size(R(1).mu, 1), size(R(1).mu, 2) * length(R))';
 		Sigma = reshape([R.Sigma],size(R(1).Sigma, 1), size(R(1).Sigma, 2) * length(R))';
@@ -51,7 +51,7 @@ function n = likelihoods(method, data, R)
 		y=data(end,:)';
 		X=data(1:end-1,:);
 		mu2=sum(X.*mu',1)';
-		n = exp(loggausspdf(y, mu2, Sigma));
+		res =exp(loggausspdf(y, mu2, Sigma));
 	case 'DPM_Seg'
 		mu = reshape([R.mu],size(R(1).mu, 1), size(R(1).mu, 2) * length(R))';
 		Sigma = reshape([R.Sigma],size(R(1).Sigma, 1), size(R(1).Sigma, 2) * length(R))';
@@ -104,7 +104,62 @@ function n = likelihoods(method, data, R)
 
 		% combine the likelihood, if points do not fall on segment we
 		% have n1 equal to 0, and want the result to be 0
-		n = n0 .* n1;
+		res =n0 .* n1;
+	
+	case 'Schedule'
+		N = size(data, 2);
+		mu1 = extend(R, 'mu1', N);
+		kappa1 = extend(R, 'kappa1', N);
+		mu2 = extend(R, 'mu2', N);
+		kappa2 = extend(R, 'kappa2', N);
+		a = extend(R, 'a', N);
+		b = extend(R, 'b', N);
+		weights0 = extend(R, 'weights0', N);
+		weights1 = extend(R, 'weights1', N);
+		weights2 = extend(R, 'weights2', N);
+	
+		% scale, make sure vmpdf(sched_pi(.), mu(.), kappa) is maximum
+		%mu = (mu - 12)*pi/12 - pi/12;
+		mu1 = (mu1 - 13)*pi/12;
+		mu2 = (mu2 - 13)*pi/12;
+
+%		K = length(R);
+		sched_pi = (-pi:(2*pi)/24:pi)(1:end-1);
+		prob = zeros(1,N);
+		for n=1:N
+			if (verbose)
+				n
+			end
+			% we should use schedule_pdf...
+			data_n = data(:,n);
+			prob(n) = 1;
+			J = length(data_n);
+			for j=1:J
+			    if (data_n(j) != 0) 
+				% sum over properly weights pdfs is also a pdf (integrating to one)
+				factor1 = weights0(n) * unifpdf(j-1, a(n), b(n));
+				factor2 = weights1(n) * vmpdf(sched_pi(j), mu1(n), kappa1(n));
+				factor3 = weights2(n) * vmpdf(sched_pi(j), mu2(n), kappa2(n));
+				factor = factor1 + factor2 + factor3;
+				prob(n) = prob(n) * factor.^data_n(j);
+				if (verbose)
+					factor1
+					factor2
+					factor3
+					prob(n)
+				end
+			    end
+
+			end
+
+%			prob(k) = 1;
+%			data(k,:)
+%			J = length(data(k,:));
+%			for j=1:J
+%				prob(k) = prob(k) * ( weights0(k) * unifpdf(data(k,j), a(k), b(k)) + weights1(k) * vmpdf(data(k,j), mu1(k), kappa1(k)) + weights2(k) * vmpdf(data(k,j), mu2(k), kappa2(k)) );
+%			end
+		end
+		res = prob;
 	otherwise
 		error('Unknown type of prior');
 	end

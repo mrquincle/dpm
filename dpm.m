@@ -53,17 +53,22 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set the prior to use
-prior = {'NIW'; 'NIG'; 'DPM_Seg'};
+prior = {'NIW'; 'NIG'; 'DPM_Seg'; 'Schedule'};
 % Select the prior by picking an index of 1 or higher.
-type_prior=prior{3};
+type_prior=prior{4};
 fprintf('Use prior ''%s''\n', type_prior);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Load the dataset
 
-outfname='twolines';
-data_dir='./data/lines';
+outfname='twitter';
+data_dir='./data/twitter';
 data_glob=[data_dir '/*.data.txt'];
+config_glob=[data_dir '/*.config.txt'];
+	
+%outfname='twolines';
+%data_dir='./data/lines';
+%data_glob=[data_dir '/*.data.txt'];
 
 fileList = glob(data_glob);
 
@@ -88,9 +93,11 @@ output_inference_file=[output_dir '/' outfname '.pnts.' timestamp '.data.txt'];
 % Number of iterations
 niter = 1000;
 niter = 200;
+niter = 100;
 
 % Type of plots (plot at every Gibbs step, or only after each point is updated)
 doPlot = 2;
+doPlot = 0;
 doPlotRaw = 0;
 
 % Get MAP estimate
@@ -105,7 +112,8 @@ findMAP = 0;
 % It is also possible to perform inference over this hyperparameter and
 % postulate an (improper) prior for alpha. We won't do that in this code.
 alpha = 1;
-%alpha = 0.1;
+%alpha = 0.5;
+alpha = 2;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The inference method
@@ -115,8 +123,11 @@ alpha = 1;
 % classifier.
 algorithm = {'BMQ'; 'CRP'; 'collapsedCRP'; 'slicesampler'; 'auxiliaryvars'};
 type_algo = algorithm{5};
-type_algo = algorithm{1};
+%type_algo = algorithm{1};
 fprintf('Use algorithm ''%s''\n', type_algo);
+
+remove_last_item = false;
+prepend_constant = false;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Persistent, so we can perform post-analysis on our inference
@@ -140,22 +151,39 @@ for f = 1:length(fileList)
 	% define here: the output file name, prior type, number of iterations,
 	% plotting variable, alpha, and the algorithm type
 	if (isOctave)
-		clear -x fileList output_inference_file fid type_prior f niter doPlot doPlotRaw alpha type_algo findMAP isOctave
+		clear -x fileList output_inference_file fid type_prior f niter doPlot doPlotRaw alpha type_algo findMAP isOctave remove_last_item prepend_constant
 	else
-		clearvars -except fileList output_inference_file fid type_prior f niter doPlot doPlotRaw alpha type_algo findMAP isOctave
+		clearvars -except fileList output_inference_file fid type_prior f niter doPlot doPlotRaw alpha type_algo findMAP isOctave remove_last_item prepend_constant
 	end
 
 	% Load the data from the dataset
 	data_file=fileList{f,1}
 	pnts=load(data_file);
-
+	
+	if(type_prior == 'Schedule') 
+		pnts = pnts.regulars;
+%		pnts = pnts.schedule_gen;
+	end
+	
 	% Assume last item is label, so remove for training
-	P=pnts(:,1:end-1)';
+	if (remove_last_item)
+		P=pnts(:,1:end-1)';
+	else
+		P=pnts';
+	end
+
+	if (remove_last_item)
+		ground_truth = pnts(:,end);
+	else
+		% no ground truth, set all to 1
+		ground_truth = ones(size(pnts(:,end)));
+	end
 
 	% Prepend the X-dimension with a constant 1. This is unique for a
 	% transformation to [y-intercept slope] coordinates.
-	X0=ones(1,size(P,2));
-	P=[X0; P];
+	if (prepend_constant)
+		P = [ones(1,size(P,2)); P];
+	end
 
 	% Plot the raw dataset, the input for the algorithm
 	if (doPlotRaw)
@@ -206,6 +234,19 @@ for f = 1:length(fileList)
 		hyperG0.shift.kappa = 0.05;
 		hyperG0.shift.nu = 4;
 		hyperG0.shift.lambda = eye(1);
+	case 'Schedule'
+		hyperG0.prior = type_prior;
+		hyperG0.a = 0;
+		hyperG0.b = 24;
+		% have a smaller lambda (<1), if not, we have a uniform 
+		% distribution for location of modes all the time (kappa)
+		hyperG0.lambda = 0.5;
+		% we sample from three distributions, each one partakes with prob p
+		% the lower p, the less multi-modal the result
+		hyperG0.p = 0.5;
+		% alpha will be used for a symmetric Dirichlet distribution
+		% alpha = 1, then uniform, alpha < 1, then more "single moded"
+		hyperG0.alpha = 1/3;
 	otherwise
 		error('Unknown prior ''%s''', type_prior);
 	end
@@ -234,7 +275,7 @@ for f = 1:length(fileList)
 	% we should somehow be able to compare the assignments with the ground truth
 	% c_est(i) is the index we assign to point pnts(i,end) where end is the
 	% value denoting the class
-	R=[c_est pnts(:,end)];
+	R=[c_est ground_truth];
 	% use standard metrics to check the performance of the assignment
 	[AR,RI,MI,HI]=RandIndex(R(:,1), R(:,2))
 
@@ -262,7 +303,7 @@ for f = 1:length(fileList)
 		end
 
 		% we should somehow be able to compare the assignments with the ground truth
-		RT=[c_map pnts(:,end)];
+		RT=[c_map ground_truth];
 		[AR,RI,MI,HI]=RandIndex(RT(:,1), RT(:,2))
 
 		clen=size(unique(c_map),1);
@@ -288,6 +329,8 @@ for f = 1:length(fileList)
 		fprintf(fid, 'mus:\n%f\n', mus);
 		fprintf(fid, 'RT:\n%f\n', RT);
 	end
+	g = sprintf('%d ', c_est);
+	fprintf(fid, 'Estimate: %s\n', g); 
 end
 
 fclose(fid);

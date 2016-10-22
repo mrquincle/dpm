@@ -4,7 +4,10 @@
 %     D x P, MU is 1 x P x K and SIGMA is P x P x K. The dimension of Y will be 
 %     D x 1.
 %
-%     Example:
+%     For pixels in a two-dimensional space: X is D x 2. MU is 1 x 2 x K and 
+%     SIGMA is 2 x 2 x K. The dimension of Y will be D x 1.
+%
+%     Code example:
 %		K = 4; P = 2; D = 10;
 %		mu = rand(1,P,K);
 %		sigma = repmat(eye(P),1,1,K) * 0.01;

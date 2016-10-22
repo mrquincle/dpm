@@ -12,7 +12,7 @@ function logpdf = loggausspdf(x, mu, Sigma)
 
     % Check dimension and center data
     if d2 ~= d
-        error('X and mu must have the same nb of columns');
+        error('X and mu must have the same dimension (# of columns)');
     elseif n2 == n
         x0 = x - mu;
     elseif n2 == 1 % mean is a single row, rep it out to match data

@@ -42,10 +42,10 @@ case { 'NIW', 'NIG' }
     for i=1:n
         logmarglik = logmarglik + pred(y(:,i), hyper(partition2(i)));
     end
-case 'DPM_Seg'
+case { 'DPM_Seg', 'Schedule' }
     for i=1:n
         % TODO, we cannot just use hyperG0 here with the data
-        logmarglik = logmarklik + pred(y(:,i), param(partition2(i)));
+        %logmarglik = logmarglik + pred(y(:,i), param(partition2(i)));
     end
 end
 
