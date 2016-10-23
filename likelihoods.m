@@ -26,85 +26,43 @@
 function res = likelihoods(method, data, R, verbose=false)
 	switch(method)
 	case 'NIW'
-		mu = reshape([R.mu],size(R(1).mu, 1), size(R(1).mu, 2) * length(R))';
-		Sigma = reshape([R.Sigma],size(R(1).Sigma, 1), size(R(1).Sigma, 2) * length(R))';
-		if (size(mu,1)==1)
-			copies=size(data, 2);
-			if (copies ~= 1)
-				% expand mu, Sigma to fit data
-				mu = repmat(mu, copies, 1);
-				Sigma = repmat(Sigma, copies, 1);
-			end
-		end
+		N = size(data, 2);
+		mu = extend(R, 'mu', N);
+		Sigma = extend(R, 'Sigma', N);
+
+		% A normal probability distribution on the data (X, MU)
 		res = exp(loggausspdf(data, mu, Sigma));
 	case 'NIG'
-		mu = reshape([R.mu],size(R(1).mu, 1), size(R(1).mu, 2) * length(R))';
-		Sigma = reshape([R.Sigma],size(R(1).Sigma, 1), size(R(1).Sigma, 2) * length(R))';
-		if (size(mu,1)==1)
-			copies=size(data, 2);
-			if (copies ~= 1)
-				% expand mu, Sigma to fit data
-				mu = repmat(mu, copies, 1);
-				Sigma = repmat(Sigma, copies, 1);
-			end
-		end
-		y=data(end,:)';
-		X=data(1:end-1,:);
-		mu2=sum(X.*mu',1)';
-		res =exp(loggausspdf(y, mu2, Sigma));
+		N = size(data, 2);
+		mu = extend(R, 'mu', N);
+		Sigma = extend(R, 'Sigma', N);
+
+		% A normal probability distribution on the data (Y, X * MU_L)
+		y = data(end,:)';
+		X = data(1:end-1,:);
+		mu2 = sum(X.*mu',1)';
+		res = exp(loggausspdf(y, mu2, Sigma));
 	case 'DPM_Seg'
-		mu = reshape([R.mu],size(R(1).mu, 1), size(R(1).mu, 2) * length(R))';
-		Sigma = reshape([R.Sigma],size(R(1).Sigma, 1), size(R(1).Sigma, 2) * length(R))';
-		a = reshape([R.a],size(R(1).a, 1), size(R(1).a, 2) * length(R))';
-		b = reshape([R.b],size(R(1).b, 1), size(R(1).b, 2) * length(R))';
+		N = size(data, 2);
+		mu = extend(R, 'mu', N);
+		Sigma = extend(R, 'Sigma', N);
+		a = extend(R, 'a', N);
+		b = extend(R, 'b', N);
 
-		% if mu is size==1
-		if (size(mu,1)==1)
-			copies=size(data, 2);
-			if (copies ~= 1)
-				% expand mu, Sigma, a, and b to fit data
-				mu = repmat(mu, copies, 1);
-				Sigma = repmat(Sigma, copies, 1);
-				a = repmat(a, copies, 1);
-				b = repmat(b, copies, 1);
-			end
-		end
-
+		% A normal probability distribution on the data (Y, X * MU_L)
 		y=data(end,:)';
 		X=data(1:end-1,:);
 		mu2=sum(X.*mu',1)';
 		n0 = exp(loggausspdf(y, mu2, Sigma));
 
-		% we have to expand mu and Sigma to a and b as well
-
-		% the line parameters correspond with mu, so we can map y to X
-		% through mu as well, then we only need the second coordinate
-		% to get x
-		%
-		% let's keep it two-dimensional for now, y=mu(1)+x*mu(2)
-		% hence x=(y-mu(1)) / mu(2), thus Xr are now the data points
-		% projected on the x-axis
-		%
-		% Note, that when the line segment is almost vertical, we get
-		% in trouble
-		% TODO: use polar coordinates, rotate the line rather than
-		% just projecting on the x-axis
+		% TODO: polar coordinates
 		Xr = (y-mu(:,1)) ./ mu(:,2);
 
-		% so we have a point cloud on the horizontal axis and can use
-		% the uniform likelihood to establish the contribution from the
-		% points being on the segment
-		% we swap a and b if a is larger than b, because we don't care
-		% which endpoint is which
-
-		% likelihood is nonzero if the point falls on the line, zero if 
-		% it does not. There is no "punishment" if the point is far from
-		% both end points
+		% A uniform distribution on [a b]
 		n1 = unifunorderedpdf(Xr, a, b)';
 
-		% combine the likelihood, if points do not fall on segment we
-		% have n1 equal to 0, and want the result to be 0
-		res =n0 .* n1;
+		% Result is product of Gaussian and translated Uniform distribution
+		res = n0 .* n1;
 	
 	case 'Schedule'
 		N = size(data, 2);
@@ -123,41 +81,34 @@ function res = likelihoods(method, data, R, verbose=false)
 		mu1 = (mu1 - 13)*pi/12;
 		mu2 = (mu2 - 13)*pi/12;
 
-%		K = length(R);
+		% The following makes clever use of a discrete sched_pi vector, but it
+		% more readable to just call something like schedule_pdf instead
 		sched_pi = (-pi:(2*pi)/24:pi)(1:end-1);
 		prob = zeros(1,N);
 		for n=1:N
 			if (verbose)
 				n
 			end
-			% we should use schedule_pdf...
 			data_n = data(:,n);
 			prob(n) = 1;
 			J = length(data_n);
 			for j=1:J
 			    if (data_n(j) != 0) 
-				% sum over properly weights pdfs is also a pdf (integrating to one)
-				factor1 = weights0(n) * unifpdf(j-1, a(n), b(n));
-				factor2 = weights1(n) * vmpdf(sched_pi(j), mu1(n), kappa1(n));
-				factor3 = weights2(n) * vmpdf(sched_pi(j), mu2(n), kappa2(n));
-				factor = factor1 + factor2 + factor3;
-				prob(n) = prob(n) * factor.^data_n(j);
-				if (verbose)
-					factor1
-					factor2
-					factor3
-					prob(n)
-				end
+					% sum over properly weights pdfs is also a pdf (integrating to one)
+					factor1 = weights0(n) * unifpdf(j-1, a(n), b(n));
+					factor2 = weights1(n) * vmpdf(sched_pi(j), mu1(n), kappa1(n));
+					factor3 = weights2(n) * vmpdf(sched_pi(j), mu2(n), kappa2(n));
+					factor = factor1 + factor2 + factor3;
+					prob(n) = prob(n) * factor.^data_n(j);
+					if (verbose)
+						factor1
+						factor2
+						factor3
+						prob(n)
+					end
 			    end
 
 			end
-
-%			prob(k) = 1;
-%			data(k,:)
-%			J = length(data(k,:));
-%			for j=1:J
-%				prob(k) = prob(k) * ( weights0(k) * unifpdf(data(k,j), a(k), b(k)) + weights1(k) * vmpdf(data(k,j), mu1(k), kappa1(k)) + weights2(k) * vmpdf(data(k,j), mu2(k), kappa2(k)) );
-%			end
 		end
 		res = prob;
 	otherwise
