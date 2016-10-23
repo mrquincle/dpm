@@ -39,11 +39,9 @@ close all;
 clear all;
 
 addpath('./performance')
-addpath('./inference')
-addpath('./inference/prior/nig')
-addpath('./inference/prior/niw')
-addpath('./inference/prior/pareto')
-addpath('./inference/likelihood/normal')
+% add path recursively
+addpath(genpath('./statistics'))
+addpath('./utils')
 
 isOctave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
 

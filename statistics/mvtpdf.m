@@ -20,17 +20,18 @@
 % https://code.google.com/p/pmtk3/source/browse/trunk/toolbox/studentT/mvtLogpdf.m?r=88
 
 function Y = mvtpdf(X, MU, SIGMA, NU)
+
 	% X(i,:) is i'th case
 	[N d] = size(X);
-	M = repmat(MU(:)', N, 1); % replicate the mean across rows
+	% replicate the mean across rows
+	M = repmat(MU(:)', N, 1); 
 	X = X-M;
-	%X
 	mahal = X'*inv(SIGMA)*X;
-	%mahal
-	%mahal = sum((X*inv(SIGMA)).*X,2);
 	logc = gammaln((NU+d)/2) - gammaln(NU/2) - 0.5*logdet(SIGMA) ...
 		- (d/2)*log(NU) - (d/2)*log(pi);
 	logp = logc  -(NU+d)/2*log1p(mahal/NU);
 
 	Y = exp(logp);
 end
+
+
