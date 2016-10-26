@@ -52,22 +52,76 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set the prior to use
 prior = {'NIW'; 'NIG'; 'DPM_Seg'; 'Schedule'};
-% Select the prior by picking an index of 1 or higher.
-type_prior=prior{4};
-fprintf('Use prior ''%s''\n', type_prior);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Load the dataset
+% Set default configuration options
 
-outfname='twitter';
-data_dir='./data/twitter';
+% Defaults:
+
+% Select the prior by picking an index of 1 or higher.
+type_prior=prior{3};
+
+% Type of plots (plot at every Gibbs step, or only after each point is updated)
+doPlot = 2;
+doPlotRaw = 0;
+
+% Number of iterations
+niter = 1000;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Dirichlet Process Mixture parameters
+
+% The most important parameter in a DPM is the scale or concentration parameter
+% called alpha. With a small alpha we will have only a few clusters. With alpha
+% very large we will have many clusters.
+% It is also possible to perform inference over this hyperparameter and
+% postulate an (improper) prior for alpha. We won't do that in this code.
+alpha = 1;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Load the dataset and configuration options that rely on it
+
+dataset = 'many-modal';
+dataset = 'twitter';
+
+switch(dataset)
+case 'twolines'
+	% Line data set
+	outfname='twolines';
+	data_dir='./data/lines';
+	findMAP = 0;
+	remove_last_item = true;
+	prepend_constant = true;
+	alpha = 0.5;
+
+case 'twitter'
+	% Twitter dataset for recommender engine
+	outfname='twitter';
+	data_dir='./data/twitter';
+	type_prior=prior{4};
+	niter = 100;
+	findMAP = 0;
+	doPlot = 0;
+	remove_last_item = false;
+	prepend_constant = false;
+	alpha = 2;
+
+case 'many-modal'
+	% Multi-modal dataset to check structured MCMC
+	outfname='many-modal';
+	data_dir='./data/many-modal';
+	niter = 100;
+	findMAP = 0;
+	remove_last_item = false;
+	prepend_constant = false;
+
+end
+
 data_glob=[data_dir '/*.data.txt'];
 config_glob=[data_dir '/*.config.txt'];
-	
-%outfname='twolines';
-%data_dir='./data/lines';
-%data_glob=[data_dir '/*.data.txt'];
 
+fprintf('Use prior ''%s''\n', type_prior);
+	
 fileList = glob(data_glob);
 
 if (length(fileList) == 0)
@@ -83,35 +137,7 @@ end
 timestamp=datestr(now,'yyyy mmm dd HH:MM:SS.FFF');
 timestamp( timestamp == ' ' ) = '_';
 
-output_inference_file=[output_dir '/' outfname '.pnts.' timestamp '.data.txt'];
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Set some other configuration options
-
-% Number of iterations
-niter = 1000;
-niter = 200;
-niter = 100;
-
-% Type of plots (plot at every Gibbs step, or only after each point is updated)
-doPlot = 2;
-doPlot = 0;
-doPlotRaw = 0;
-
-% Get MAP estimate
-findMAP = 0;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Dirichlet Process Mixture parameters
-
-% The most important parameter in a DPM is the scale or concentration parameter
-% called alpha. With a small alpha we will have only a few clusters. With alpha
-% very large we will have many clusters.
-% It is also possible to perform inference over this hyperparameter and
-% postulate an (improper) prior for alpha. We won't do that in this code.
-alpha = 1;
-%alpha = 0.5;
-alpha = 2;
+output_inference_file=[output_dir '/' outfname '.output.' timestamp '.data.txt'];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The inference method
@@ -124,8 +150,6 @@ type_algo = algorithm{5};
 %type_algo = algorithm{1};
 fprintf('Use algorithm ''%s''\n', type_algo);
 
-remove_last_item = false;
-prepend_constant = false;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Persistent, so we can perform post-analysis on our inference
@@ -149,18 +173,21 @@ for f = 1:length(fileList)
 	% define here: the output file name, prior type, number of iterations,
 	% plotting variable, alpha, and the algorithm type
 	if (isOctave)
-		clear -x fileList output_inference_file fid type_prior f niter doPlot doPlotRaw alpha type_algo findMAP isOctave remove_last_item prepend_constant
+		clear -x fileList output_inference_file fid type_prior f niter doPlot doPlotRaw alpha type_algo findMAP isOctave remove_last_item prepend_constant dataset
 	else
-		clearvars -except fileList output_inference_file fid type_prior f niter doPlot doPlotRaw alpha type_algo findMAP isOctave remove_last_item prepend_constant
+		clearvars -except fileList output_inference_file fid type_prior f niter doPlot doPlotRaw alpha type_algo findMAP isOctave remove_last_item prepend_constant dataset
 	end
 
 	% Load the data from the dataset
 	data_file=fileList{f,1}
 	pnts=load(data_file);
 	
-	if(type_prior == 'Schedule') 
+	switch(dataset)
+	case 'twitter'
 		pnts = pnts.regulars;
 %		pnts = pnts.schedule_gen;
+	case 'many-modal'
+		pnts = extract(pnts.dataset, 'data');
 	end
 	
 	% Assume last item is label, so remove for training

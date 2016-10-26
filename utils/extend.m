@@ -5,7 +5,7 @@
 % 
 %
 function res = extend(S, F, N)
-	res = reshape([S.(F)],size(S(1).(F)) .* size(S))';
+	res = extract(S, F);
 	if (size(res,1)==1)
 		if (N ~= 1)
 			res = repmat(res, N, 1);
