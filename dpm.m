@@ -82,7 +82,7 @@ alpha = 1;
 % Load the dataset and configuration options that rely on it
 
 dataset = 'many-modal';
-dataset = 'twitter';
+%dataset = 'twitter';
 
 switch(dataset)
 case 'twolines'

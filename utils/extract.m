@@ -8,14 +8,19 @@ function res = extract(S, F)
 	[~, K] = size(S);
 	[KD DD] = size(S(1).(F));
 
+    % correctly reshaped, but not yet in order (except when KD == 1)
 	unordered = reshape([S.(F)]', DD, KD * K)';
 
-	% this does not yet take into account the right order; let's correct that
+	% correct the order (actually not relevant in training!)
 	if KD > 1
-		order = reshape(repmat([1:KD:K*KD]', 1, K) + [0:K-1], 1, K*KD);
+		% calculate how 1:K with each of length KD would be reshaped
+		order = reshape(repmat([1:KD:K*KD]', 1, KD) + [0:KD-1], 1, K*KD);
+
+		% inverse that order
+		[~, inv_order] = sort(order);
 
 		% now it's properly ordered!
-		res = unordered(order, :);
+		res = unordered(inv_order, :);
 	else
 		res = unordered;
 	end
