@@ -1,0 +1,12 @@
+output_inference_file:
+./output/twolines.pnts.2016_May_01_17:20:43.078.data.txt
+niter:
+1000
+doPlot:
+2
+type_prior:
+DPM_Seg
+alpha:
+1
+type_algo:
+auxiliaryvars

@@ -1,0 +1,12 @@
+output_inference_file:
+./output/twitter.output.2016_Oct_26_19:58:03.861.data.txt
+niter:
+100
+doPlot:
+0
+type_prior:
+Schedule
+alpha:
+2
+type_algo:
+auxiliaryvars
