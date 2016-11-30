@@ -1,9 +1,52 @@
-% Gibbs sampler for Dirichlet Process Mixtures of Gaussians
-% The base distribution G0 is Normal inverse Wishart of parameters given by
-% hyperG0
-% Reference: Algorithm 2 of Neal
-
-% In the paper we have used this one, not the collapsed CRP.
+% -- Function: C_ST = gibbsDPM_algo2(Y, HYPERG0, ALPHA, NITER, DOPLOT)
+%     Gibbs sampler for Dirichlet Process Mixtures of Normal distributions
+%     with in Y the observations.
+%
+%     The base distribution HYPERG0 can be of two forms:
+%       NIG: a Normal-Inverse Gamma distribution (G stands for Gamma!)
+%       NIW: a Normal-Inverse Wishart distribution
+%
+%     The NIG distribution is governed by four parameters:
+%       mu (Real): location 
+%       a > 0: shape parameter
+%       b > 0: rate parameter
+%       Lambda > 0: scale parameter
+%     The NIG distribution is the conjugate prior for a monovariate
+%     Normal distribution N(mu, sigma).
+%
+%     The NIW distribution is also governed by four parameters:
+%       mu (Real vector of dimension D): location 
+%       kappa (Real matrix of DxD): inverse scale matrix (pos. def.)
+%       nu > D - 1
+%       lambda > 0: a scale parameter
+%     The NIG distribution is the conjugate prior for a multivariate
+%     Normal distribution N(mu, Sigma) with mu a vector and Sigma a
+%     covariance matrix.
+%
+%     The remaining parameters of this function:
+%       ALPHA: concentration parameter for the Dirichlet Process.
+%       NITER: number of iterations of Gibbs sampler.
+%       DOPLOT: plot during the sampling process.
+%
+%     Results:
+%       C_ST: for each N observations a cluster index is returned. This forms a 
+%         column vector. For NITER iterations this forms a matrix of column 
+%         vectors. From the NITER iterations there will be a number thrown away,
+%         so-called burnin (which is now hardcoded to NITER/2).
+%
+%     Extensions:
+%       If you want to extend this sampler with other prior distributions, make
+%       sure that they can be represented by sufficient statistics. In 
+%       particular, you'll need to be able to update the sufficient statistics
+%       of a distribution when removing an observation (called downdate in the
+%       code).
+%
+%     References: 
+%       Algorithm 2 of Neal
+%       https://www.wikiwand.com/en/Normal-inverse-gamma_distribution
+%       https://www.wikiwand.com/en/Normal-inverse-Wishart_distribution
+%
+%     Application: Line estimation with mean and covariance from NIW.
 
 function c_st = gibbsDPM_algo2(y, hyperG0, alpha, niter, doPlot)
 
@@ -20,19 +63,29 @@ function c_st = gibbsDPM_algo2(y, hyperG0, alpha, niter, doPlot)
         warning("Are you sure that y is ordered with each observation as a column?");
     end
 
+    % number of samples to throw away
+    niter_burnin = niter/2;
+
     % c_st is statistics to be returned
-    c_st = zeros(n, niter/2);
+    c_st = zeros(n, niter - niter_burnin);
 
     % U_SS is a structure array where U_SS(k) contains the sufficient
     % statistics associated to cluster k
-    if (hyperG0.prior == 'NIW')
+    switch(hyperG0.prior)
+    case 'NIG'
+        U_SS = struct('prior', 'NIG', ...
+            'mu', cell(n, 1), ...
+            'a', cell(n, 1), ...
+            'b', cell(n, 1), ...
+            'Lambda', cell(n, 1));
+    case 'NIW'
         U_SS = struct('prior', 'NIW', ...
             'mu', cell(n, 1), ...
             'kappa', cell(n, 1), ...
             'nu', cell(n, 1), ...
             'lambda', cell(n, 1));
-    else
-        U_SS = struct('prior', 'NIG', 'mu', cell(n, 1), 'a', cell(n, 1), 'b', cell(n, 1), 'Lambda', cell(n, 1));
+	otherwise
+		error('The sufficient statistics for prior ''%s'' are unknown', hyperG0.prior);
     end
 
     % Just reserve enough tables/clusters
@@ -71,7 +124,8 @@ function c_st = gibbsDPM_algo2(y, hyperG0, alpha, niter, doPlot)
 
             % Remove data i from the partition
             m(k) = m(k) - 1;
-	
+
+            % Update the sufficient statistics with this data item removed
             U_SS(k) = downdate_SS(y, i, U_SS(k));
 
             % New cluster assignment for observation i
@@ -109,8 +163,8 @@ function c_st = gibbsDPM_algo2(y, hyperG0, alpha, niter, doPlot)
             U_R(k) = R;
         end
 
-        if t>niter/2
-            c_st(:, t-niter/2) = c;
+        if t>niter_burnin
+            c_st(:, t-niter_burnin) = c;
         end
 
         if doPlot==2

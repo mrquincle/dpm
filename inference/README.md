@@ -1,5 +1,31 @@
 # Dirichlet Process Mixture
 
+The Dirichlet Process is a (prior) distribution over distributions. You throw in a probability distribution (a so-called base distribution) and out you get a series of probability distributions. In the form of an equation: G ~ DP(H, alpha). The scalar alpha defines how often exactly the same distribution is sampled from H.
+
+
+```
+                _______________
+               |               |
+               |               |
+               |               |
+       H  -->  |   Dirichlet   | --> G
+	alpha -->  |    Process    |
+               |               |
+               |               |
+               |_______________|
+
+```
+
+So, suppose we sample multiple G0, G1, G2, ..., then Gi and Gj can be exactly the same distribution even if their parameters come from a continuous space. For example Gi can be the normal distribution N(mu=1.120391948, sigma=0.23874921111), and Gj can be exactly the same distribution! 
+
+# Conventions
+
+Due to idiosyncrasies of octave/matlab the code gravitated towards the following conventions:
+
+* Data is stored column-wise: `model(1).mu = [0; 1]`. This allows extraction as one matrix by: `[model.mu]`.
+* Data in nd-arrays is ordered by last index: `R(:,:,1) = rand(2,2)`, not as `S(1,:,:)` because that's harder to extract. 
+* Data is displayed by explicitly using `disp`. 
+
 ## Dependencies
 
 Install matlab or octave, in the latter case:
