@@ -27,7 +27,7 @@ for j=1:length(ind)
     case { 'NIW', 'NIG' }
         hyper(j) = hyperG0;
         for k=1:length(ind_j)
-            hyper(j) = update_SS(y(:,ind_j(k)), hyper(j));
+            hyper(j) = update_SS(y, ind_j(k), hyper(j));
         end
     end
 end

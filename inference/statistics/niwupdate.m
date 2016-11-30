@@ -1,30 +1,37 @@
-function S = niwupdate(z, S)
-	mu0 = S.mu;
-	kappa0 = S.kappa;
-	nu0 = S.nu;
-	lambda0 = S.lambda;
+% Update sufficient statistics of the Normal-Inverse Wishart distribution.
+%
+% -- Function: Sn = niwupdate(z, S0)
+%     Return updated sufficient statistics Sn when adding a single observation.
+%	
+% Implementation: the update to the hyperparameters when getting a series of 
+% observations X_1, ..., X_n, with average X:
+%   nu_n = nu_0 + n
+%   kappa_n = kappa_0 + n
+%   mu_n = (kappa_0 * mu_0) / (kappa_0 + n) + n / (kappa_0 + n) * X
+%   Q_0 = sum_{i=1}^n (X_i - X)(X_i - X)'
+%   lambda_n = lambda_0 + Q_0 + (kappa_0 * n) / (kappa_0 + n) * (X - mu_0)*(X - mu_0)'
+%
+% For a single observation:
+%   nu_n = nu_0 + 1
+%   kappa_n = kappa_0 + 1
+%   mu_n = (kappa_0 * mu_0) / (kappa_0 + 1) + 1 / (kappa_0 + 1) * X
+%   Q_0 = 0
+%   lambda_n = lambda_0 + Q_0 + (kappa_0 * 1) / (kappa_0 + 1) * (X - mu_0)*(X - mu_0)'
+%
+% See: Wishart Distributions and Inverse-Wishart Sampling [Sawyer]
 
-	% the hyperparameters can be adapted also with multiple variables at once
-	% Wishart Distributions and Inverse-Wishart Sampling [Sawyer]
+function Sn = niwupdate(z, S0)
+	Sn = S0;
+	N = size(z, 2);
 
-	% suppose, we do not just get z, but we get a series of new samples X_1, ..., X_n, with average X
-	% nu_n = nu_0 + n
-	% kappa_n = kappa_0 + n
-	% mu_n = (kappa_0 * mu_0) / (kappa_0 + n) + n / (kappa_0 + n) * X
-	% lambda_n = lambda_0 + Q_0 + (kappa_0 * n) / (kappa_0 + n) * (X - mu_0)*(X - mu_0)'
-	%
-	% with Q_0 is 0 if n = 1, and more specific:
-	%      Q_0 = sum_{i=1}^n (X_i - X)(X_i - X)'
+	if ~(size_equal(S0.mu, z)) 
+		error("niwupdate: dimension of mu and z should be equal");
+	elseif (N != 1)
+		error ("niwupdate: only implemented for N=1");
+	end
 
-	kappa1 = kappa0+1;
-	nu1 = nu0+1;
-	mu1 = kappa0/(kappa0+1)*mu0+1/(kappa0+1)*z;
-	lambda1 = lambda0+kappa0/(kappa0+1)*(z-mu0)*(z-mu0)';
-	% if isnan(lambda1)
-	%     keyboard
-	% end
-	S.kappa = kappa1;
-	S.mu = mu1;
-	S.nu = nu1;
-	S.lambda = lambda1;
+	Sn.kappa = S0.kappa + 1;
+	Sn.nu = S0.nu + 1;
+	Sn.mu = (S0.mu * S0.kappa + z) / Sn.kappa;
+	Sn.lambda = S0.lambda + S0.kappa / Sn.kappa * (z - S0.mu) * (z - S0.mu)';
 end

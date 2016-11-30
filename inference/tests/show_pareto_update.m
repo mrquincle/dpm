@@ -1,7 +1,7 @@
 % generate samples on a line and get endpoints
 
-addpath('../inference')
-addpath('../inference/prior/pareto')
+addpath('../inference');
+addpath('../inference/prior/pareto');
 
 lb=-4;
 hb=5;
@@ -139,10 +139,10 @@ for p=1:2
 end
 
 W = 14; H = 3;
-set(fg,'PaperUnits','inches')
+set(fg,'PaperUnits','inches');
 set(fg,'PaperOrientation','portrait');
-set(fg,'PaperSize',[H,W])
-set(fg,'PaperPosition',[0,0,W,H])
+set(fg,'PaperSize',[H,W]);
+set(fg,'PaperPosition',[0,0,W,H]);
 
 %ha = axes('Position', [0 0 1 1], 'Xlim', [0 1], 'Ylim', [0 1], 'Box', 'off', 'Visible', 'off', 'Units', 'normalized', 'clipping', 'off');
 %text(0.5, 0.98,'Update of Pareto distribution after observations','HorizontalAlignment','center','VerticalAlignment', 'top')

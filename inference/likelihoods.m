@@ -23,10 +23,14 @@
 %     method='DPM_Seg' has a similar Gaussian likelihood for the line 
 %       parameters, projects this line on the x-axis and defines a uniform
 %       distribution between a and b.
+%
+%  TODO: Check if I've run multidimensional means. 
+
 function res = likelihoods(method, data, R, verbose=false)
 	switch(method)
 	case 'NIW'
 		N = size(data, 2);
+	
 		mu = extend(R, 'mu', N);
 		Sigma = extend(R, 'Sigma', N);
 
@@ -101,10 +105,10 @@ function res = likelihoods(method, data, R, verbose=false)
 					factor = factor1 + factor2 + factor3;
 					prob(n) = prob(n) * factor.^data_n(j);
 					if (verbose)
-						factor1
-						factor2
-						factor3
-						prob(n)
+						disp(factor1);
+						disp(factor2);
+						disp(factor3);
+						disp(prob(n));
 					end
 			    end
 

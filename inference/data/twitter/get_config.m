@@ -9,10 +9,11 @@ file = fileList{1,1};
 config=load(file);
 
 print_struct_array_contents(true);
-config
+disp(config);
 
 dS = config.hyper;
 dS = rmfield(dS, 'a');
 dS = rmfield(dS, 'b');
 
-dS
+printf("Display fields after removing a and b");
+disp(dS);

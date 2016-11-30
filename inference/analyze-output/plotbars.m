@@ -51,10 +51,10 @@ title(plot_title);
 %legend('Average performance');
 
 W = 4; H = 3;
-set(fg,'PaperUnits','inches')
+set(fg,'PaperUnits','inches');
 set(fg,'PaperOrientation','portrait');
-set(fg,'PaperSize',[H,W])
-set(fg,'PaperPosition',[0,0,W,H])
+set(fg,'PaperSize',[H,W]);
+set(fg,'PaperPosition',[0,0,W,H]);
 
 FN = findall(fg,'-property','FontName');
 set(FN,'FontName','/usr/share/fonts/dejavu/DejaVuSerifCondensed.ttf');

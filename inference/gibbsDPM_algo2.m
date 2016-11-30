@@ -13,69 +13,90 @@ function c_st = gibbsDPM_algo2(y, hyperG0, alpha, niter, doPlot)
         cmap = colormap;
     end
 
-    n = size(y,2);
+    % n is the number of observations
+    [d n] = size(y);
+
+    if (n < d)
+        warning("Are you sure that y is ordered with each observation as a column?");
+    end
+
+    % c_st is statistics to be returned
     c_st = zeros(n, niter/2);
 
     % U_SS is a structure array where U_SS(k) contains the sufficient
     % statistics associated to cluster k
     if (hyperG0.prior == 'NIW')
-        U_SS = struct('prior', 'NIW', 'mu', cell(n, 1), 'kappa', cell(n, 1), ...
-        'nu', cell(n, 1), 'lambda', cell(n, 1));
+        U_SS = struct('prior', 'NIW', ...
+            'mu', cell(n, 1), ...
+            'kappa', cell(n, 1), ...
+            'nu', cell(n, 1), ...
+            'lambda', cell(n, 1));
     else
         U_SS = struct('prior', 'NIG', 'mu', cell(n, 1), 'a', cell(n, 1), 'b', cell(n, 1), 'Lambda', cell(n, 1));
     end
 
     % Just reserve enough tables/clusters
+    % m is the number of observations at table k: #obs = m(k) 
     m = zeros(1,200);
+    % c is assignment between observation i and table k: c(i) = k
     c = zeros(n, 1);
 
     % Initialisation
-    for k=1:n
-        c(k) = ceil(30*rand); % Sample new allocation uniform
-        m(c(k)) = m(c(k)) + 1;
-        if m(c(k))>1
-            U_SS(c(k)) = update_SS(y(:,k), U_SS(c(k)));
+    for i=1:n
+        % Sample new allocation uniform, using rand
+        k = ceil(30*rand); 
+        c(i) = k;
+        m(k) = m(k) + 1;
+        % Update sufficient statistics of table k with information from data i
+        if m(k)>1
+            U_SS(k) = update_SS(y, i, U_SS(k));
         else
-            U_SS(c(k)) = update_SS(y(:,k), hyperG0);
+            U_SS(k) = update_SS(y, i, hyperG0);
         end
     end
 
-    % Iterate over the tables (unique indices in customer allocation array c)
-    % to get the first samples for U_R.
-    ind = unique(c);
+    % ind is indices to tables (by running find on tables m)
+    ind = find(m);
     for j=1:length(ind)
-        R = sample_pdf(U_SS(ind(j)));
-        U_R(ind(j)) = R;
+        k = ind(j);
+        R = sample_pdf(U_SS(k));
+        U_R(k) = R;
     end
 
-    % Iterations
-    for i=2:niter
-        % Update cluster assignments c
-        for k=1:n
-            % Remove data k from the partition
-            m(c(k)) = m(c(k)) - 1;
-	
-            U_SS(c(k)) = downdate_SS(y, k, U_SS(c(k)));
+    % t is used to indicate iterations (not time)
+    for t=2:niter
+        for i=1:n
+            % Update cluster assignment c(i) 
+            k = c(i);
 
-            % Sample allocation of data k
-            c(k) = sample_c(m, alpha, y(:,k), hyperG0, U_R);
-            m(c(k)) = m(c(k)) + 1;
-            if m(c(k))>1
+            % Remove data i from the partition
+            m(k) = m(k) - 1;
+	
+            U_SS(k) = downdate_SS(y, i, U_SS(k));
+
+            % New cluster assignment for observation i
+            c(i) = sample_c(m, alpha, y(:,i), hyperG0, U_R);
+            k = c(i);
+
+            % Add data i to new found table
+            m(k) = m(k) + 1;
+
+            % Update or generate sufficient statistics
+            if m(k)>1
                 % There were already data items at this table
-                % Update the sufficient statistics with the new data y(:,k)
-                U_SS(c(k)) = update_SS(y, k, U_SS(c(k)));
+                % Update the sufficient statistics with the new data y(:,i)
+                U_SS(k) = update_SS(y, i, U_SS(k));
             else
                 % It is the first item at this table, calculate the sufficient
-                % statistics using the base distribution G0 and the first data
-                % item
-                U_SS(c(k)) = update_SS(y, k, hyperG0);
+                % statistics using the base distribution G0 and the data item
+                U_SS(k) = update_SS(y, i, hyperG0);
                 % Sample from H_i
-                R = sample_pdf(U_SS(c(k)));
-                U_R(c(k)) = R;
+                R = sample_pdf(U_SS(k));
+                U_R(k) = R;
             end
 
             if doPlot==1
-                some_plot(y, hyperG0, U_R, m, c, k, i, cmap)
+                some_plot(y, hyperG0, U_R, m, c, i, t, cmap)
             end
         end
 
@@ -83,16 +104,17 @@ function c_st = gibbsDPM_algo2(y, hyperG0, alpha, niter, doPlot)
         % statistics U_SS
         ind = find(m);
         for j=1:length(ind)
-            R = sample_pdf(U_SS(ind(j)));
-            U_R(ind(j)) = R;
+            k = ind(j);
+            R = sample_pdf(U_SS(k));
+            U_R(k) = R;
         end
 
-        if i>niter/2
-            c_st(:, i-niter/2) = c;
+        if t>niter/2
+            c_st(:, t-niter/2) = c;
         end
 
         if doPlot==2
-            some_plot(y, hyperG0, U_R, m, c, k, i, cmap)
+            some_plot(y, hyperG0, U_R, m, c, k, t, cmap)
         end
 
     end
@@ -111,7 +133,13 @@ function K = sample_c(m, alpha, z, hyperG0, U_R)
 
     c = find(m~=0); % gives indices of non-empty clusters
 
-    n = m(c).*likelihoods(hyperG0.prior, repmat(z, 1, length(c)), U_R(c) )';
+    Z = repmat(z, 1, length(c));
+    l = likelihoods(hyperG0.prior, Z, U_R(c) );
+
+    if size(l, 2) != length(c) || size(l,1) != 1
+        error("Likelihood vector should be of size 1 x C (row-vector)");
+    end
+    n = m(c) .* l;
 
     n0 = pred(z, hyperG0);
     const = sum(n) + alpha*n0;
@@ -155,7 +183,7 @@ function some_plot(z, hyperG0, U_R, m, c, k, i, cmap)
     save_plot=true;
     if (save_plot)
         name=sprintf('output/image%04i.jpg', i);
-        name
+        disp(name);
         print(name, '-djpg');
     end
 end

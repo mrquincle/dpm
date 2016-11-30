@@ -1,5 +1,5 @@
-clear all
-close all
+clear all;
+close all;
 
 data_dir = '.';
 data_dir = 'generated';
@@ -28,7 +28,7 @@ M = [dataR dataL];
 
 [values, order] = sort(M(:,end));
 
-R = M(order,:)
+R = M(order,:);
 
 T = R(:,1:end-1);
 
@@ -46,7 +46,7 @@ J = unique(values);
 for j = 1:length(J);
 	figure(j);
 	file=[data_dir num2str(j)];
-	saveas(f(j), file, 'png')
+	saveas(f(j), file, 'png');
 end
 
-close all
+close all;

@@ -1,7 +1,7 @@
 % Plots the probability density function of the Pareto distribution
 
-addpath('../inference')
-addpath('../inference/prior/pareto')
+addpath('../inference');
+addpath('../inference/prior/pareto');
 
 alpha=5;
 N=1000;
@@ -46,10 +46,10 @@ if (i_dont_remember)
 end
 
 W = 7; H = 3;
-set(fg,'PaperUnits','inches')
+set(fg,'PaperUnits','inches');
 set(fg,'PaperOrientation','portrait');
-set(fg,'PaperSize',[H,W])
-set(fg,'PaperPosition',[0,0,W,H])
+set(fg,'PaperSize',[H,W]);
+set(fg,'PaperPosition',[0,0,W,H]);
 
 %ha = axes('Position', [0 0 1 1], 'Xlim', [0 1], 'Ylim', [0 1], 'Box', 'off', 'Visible', 'off', 'Units', 'normalized', 'clipping', 'off');
 %text(0.5, 0.98,'Update of Pareto distribution after observations','HorizontalAlignment','center','VerticalAlignment', 'top')

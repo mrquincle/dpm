@@ -1,5 +1,5 @@
-clear all
-close all
+clear all;
+close all;
 
 addpath('..');
 
@@ -79,9 +79,9 @@ else
 end
 
 file=['image' num2str(j)];
-saveas(f(j), file, 'png')
+saveas(f(j), file, 'png');
 
-S
+disp(S);
 
 % S should be almost equal to 1
 assert(S-1 < 0.01);

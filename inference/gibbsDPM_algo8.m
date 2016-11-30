@@ -20,7 +20,7 @@ function c_st = gibbsDPM_algo8(y, hyperG0, alpha, niter, doPlot)
 
     if doPlot
         figure('name','Gibbs sampling for DPM');
-        colormap('default')
+        colormap('default');
         cmap = colormap;
     end
 
@@ -48,11 +48,11 @@ function c_st = gibbsDPM_algo8(y, hyperG0, alpha, niter, doPlot)
             if m(c(k))>1
                 % If there are already customers assigned, update the sufficient
                 % statistics with the new data item
-                U_SS(c(k)) = update_SS(y(:,k), U_SS(c(k)));
+                U_SS(c(k)) = update_SS(y, k, U_SS(c(k)));
             else
                 % If this is the first customer, draw sufficient statistics from
                 % the hyper prior.
-                U_SS(c(k)) = update_SS(y(:,k), hyperG0);
+                U_SS(c(k)) = update_SS(y, k, hyperG0);
             end
         case 'DPM_Seg'
              % Nothing to do..., there are no sufficient statistics
@@ -273,8 +273,8 @@ function total_likelihood(m, z, likelihood_type, U_R, c)
     [Lmax, Li ] = maximum(L, 2);
 
     for i = 1:length(Li)
-        cluster=Li(i)
-        likelihood = Lmax(i)
+        cluster=Li(i);
+        likelihood = Lmax(i);
 
         % show a particularly good fitting table...
         tables = find(m);
@@ -282,10 +282,17 @@ function total_likelihood(m, z, likelihood_type, U_R, c)
         j = cind(cluster);
         cust=find(c == j);
 
-        table = j
-        observations_at_this_table = z(:,cust)
-        parameters = U_R(j)
-        likelihoods_at_this_table = likelihoods(likelihood_type, z(:,cust), U_R(j))
+        table = j;
+        observations_at_this_table = z(:,cust);
+        parameters = U_R(j);
+        likelihoods_at_this_table = likelihoods(likelihood_type, z(:,cust), U_R(j));
+        
+        disp(cluster);
+        disp(likelihood);
+        disp(table);
+        disp(observations_at_this_table);
+        disp(parameters);
+        disp(likelihoods_at_this_table);
     end
 end
 

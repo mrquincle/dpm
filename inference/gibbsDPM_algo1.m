@@ -23,7 +23,7 @@ function c_st = gibbsDPM_algo1(P, hyperG0, alpha, niter, doPlot)
     theta_mu = zeros(p, n);
 
     % Initialisation
-    hyper = update_SS(P(:, 1), hyperG0);
+    hyper = update_SS(P, 1, hyperG0);
     %[theta_mu(:, 1), theta_Sigma(:,:, 1)] = normalinvwishrnd(hyper);
     R = sample_pdf(hyper);
     theta_mu(:, 1) = R.mu;
@@ -133,7 +133,7 @@ function [theta_mu_k, theta_Sigma_k] = sample_theta(alpha, z, hyperG0, theta_mu_
         % but better to first update the hyper parameters given new observation z
 
         % THIS IS CALCULATED MANY TIMES! SHOULD BE STORED IN TABLE
-        hyper = update_SS(z, hyperG0);
+        hyper = update_SS(z, 1:length(z), hyperG0);
         % and then get X_i given these hyper parameters
         %[theta_mu_k, theta_Sigma_k] = normalinvwishrnd(hyper);
         R = sample_pdf(hyper);
@@ -186,9 +186,12 @@ function some_plot(zt, theta_mu, theta_Sigma, k, i, n, cmap)
         for j=maxN
             cluster=j
             ind2 = find(theta_mu(1, :)==ind(j));
-            cluster_line_coefficients=theta_mu(:,ind2(1))
-            sigma=theta_Sigma(ind2(1))
-            nmbr=cnt(j)
+            cluster_line_coefficients=theta_mu(:,ind2(1));
+            sigma=theta_Sigma(ind2(1));
+            nmbr=cnt(j);
+            disp(cluster_line_coefficients);
+            disp(sigma);
+            disp(nmbr);
        end
    end
     % print also one when tere is a single cluster

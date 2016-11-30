@@ -149,6 +149,7 @@ output_inference_file=[output_dir '/' outfname '.output.' timestamp '.data.txt']
 algorithm = {'BMQ'; 'CRP'; 'collapsedCRP'; 'slicesampler'; 'auxiliaryvars'};
 type_algo = algorithm{5};
 %type_algo = algorithm{1};
+type_algo = algorithm{2};
 fprintf('Use algorithm ''%s''\n', type_algo);
 
 
@@ -188,7 +189,7 @@ for f = 1:length(fileList)
 		pnts = pnts.regulars;
 %		pnts = pnts.schedule_gen;
 	case 'many-modal'
-		pnts = extract(pnts.dataset, 'data');
+		pnts = extract(pnts.dataset, 'data', 0);
 	end
 	
 	% Assume last item is label, so remove for training
@@ -276,6 +277,9 @@ for f = 1:length(fileList)
 	otherwise
 		error('Unknown prior ''%s''', type_prior);
 	end
+		
+	printf("Prior used:\n");
+	disp(hyperG0);
 
 	% Actual Gibbs sampling
 	[c_st, c_est, similarity] = gibbsDPM(P, hyperG0, alpha, niter, type_algo, doPlot);
@@ -303,7 +307,11 @@ for f = 1:length(fileList)
 	% value denoting the class
 	R=[c_est ground_truth];
 	% use standard metrics to check the performance of the assignment
-	[AR,RI,MI,HI]=RandIndex(R(:,1), R(:,2))
+	[AR,RI,MI,HI]=RandIndex(R(:,1), R(:,2));
+	disp(AR);
+	disp(RI);
+	disp(MI);
+	disp(HI);
 
 	if (findMAP)
 		% find MAP
@@ -330,7 +338,11 @@ for f = 1:length(fileList)
 
 		% we should somehow be able to compare the assignments with the ground truth
 		RT=[c_map ground_truth];
-		[AR,RI,MI,HI]=RandIndex(RT(:,1), RT(:,2))
+		[AR,RI,MI,HI]=RandIndex(RT(:,1), RT(:,2));
+		disp(AR);
+		disp(RI);
+		disp(MI);
+		disp(HI);
 
 		clen=size(unique(c_map),1);
 		chist=zeros(2, clen);
@@ -340,7 +352,7 @@ for f = 1:length(fileList)
 		for i=1:clen
 			% subset of points belonging to non-empty cluster chist[i]
 			Pl=P(:,c_map==chist(2,i));
-			Pu=update_SS(Pl,hyperG0);
+			Pu=update_SS(Pl,1:length(Pl),hyperG0);
 			mus(:,i)=Pu.mu';
 		end
 	end
