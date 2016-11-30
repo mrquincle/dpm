@@ -1,6 +1,6 @@
 # Dirichlet Process Mixture
 
-The Dirichlet Process is a (prior) distribution over distributions. You throw in a probability distribution (a so-called base distribution) and out you get a series of probability distributions. In the form of an equation: G ~ DP(H, alpha). The scalar alpha defines how often exactly the same distribution is sampled from H.
+The Dirichlet Process is a (prior) distribution over distributions. You throw in a probability distribution (a so-called base distribution) and out you get a series of probability distributions. In the form of an equation: `G ~ DP(H, alpha)`. The scalar alpha defines how often exactly the same distribution is sampled from H.
 
 
 ```
@@ -9,7 +9,7 @@ The Dirichlet Process is a (prior) distribution over distributions. You throw in
                |               |
                |               |
        H  -->  |   Dirichlet   | --> G
-	alpha -->  |    Process    |
+    alpha -->  |    Process    |
                |               |
                |               |
                |_______________|
@@ -17,6 +17,21 @@ The Dirichlet Process is a (prior) distribution over distributions. You throw in
 ```
 
 So, suppose we sample multiple G0, G1, G2, ..., then Gi and Gj can be exactly the same distribution even if their parameters come from a continuous space. For example Gi can be the normal distribution N(mu=1.120391948, sigma=0.23874921111), and Gj can be exactly the same distribution! 
+
+
+# The cool stuff
+
+Check [this presentation](http://perso.telecom-paristech.fr/~gfort/Slides/Barcelone14.pdf) by Fort for some ways to cope with very multimodal distributions. Their example uses 20 multinormal distributions.
+
+```
+pi = sum_{i=1}^20 N(mu_i, Sigma_i)
+```
+
+Our example is similar, but for 100 of these distributions, with Sigma homogenous, and most importantly `mu` for each distribution derived from a deterministic function depending on `i`:
+
+```
+pi = sum_{i=1}^100 N(f_i(mu), Sigma)
+```
 
 # Conventions
 

@@ -30,7 +30,7 @@ function res = likelihoods(method, data, R, verbose=false)
 	switch(method)
 	case 'NIW'
 		N = size(data, 2);
-	
+
 		mu = extend(R, 'mu', N);
 		Sigma = extend(R, 'Sigma', N);
 

@@ -150,7 +150,7 @@ function c_st = gibbsDPM_algo2(y, hyperG0, alpha, niter, doPlot)
             end
 
             if doPlot==1
-                some_plot(y, hyperG0, U_R, m, c, i, t, cmap)
+                plot_assignments(y, hyperG0, U_R, m, c, i, t, cmap)
             end
         end
 
@@ -167,8 +167,12 @@ function c_st = gibbsDPM_algo2(y, hyperG0, alpha, niter, doPlot)
             c_st(:, t-niter_burnin) = c;
         end
 
+        printf("Number of customers at each table [step %i]:\n", i);
+        tables = find(m)
+        customers = m(find(m))
+
         if doPlot==2
-            some_plot(y, hyperG0, U_R, m, c, k, t, cmap)
+            plot_assignments(y, hyperG0, U_R, m, c, k, t, cmap)
         end
 
     end
@@ -206,38 +210,5 @@ function K = sample_c(m, alpha, z, hyperG0, U_R)
         u1 = (u-p0);
         ind = find(cumsum(n/const)>=u1, 1 );
         K = c(ind);
-    end
-end
-
-function some_plot(z, hyperG0, U_R, m, c, k, i, cmap)
-
-    % If it's 
-    if strcmp(hyperG0.prior, 'NIG')
-        z=z(2:end,:);
-    end
-
-    ind=find(m);
-    hold off;
-    for j=1:length(ind)
-        plot(z(1,c==ind(j)),z(2,c==ind(j)),'.','color',cmap(mod(5*ind(j),63)+1,:), 'markersize', 15);
-        hold on
-        %plot(U_mu(1,ind(j)),U_mu(2,ind(j)),'.','color',cmap(mod(5*ind(j),63)+1,:), 'markersize', 30);
-        %plot(U_mu(1,ind(j)),U_mu(2,ind(j)),'ok', 'linewidth', 2, 'markersize', 10);
-        plot(U_R(ind(j)).mu(1),U_R(ind(j)).mu(2),'.','color',cmap(mod(5*ind(j),63)+1,:), 'markersize', 30);
-        plot(U_R(ind(j)).mu(1),U_R(ind(j)).mu(2),'ok', 'linewidth', 2, 'markersize', 10);
-    end
-    plot(z(1,k),z(2,k),'or', 'linewidth', 3)
-    title(['i=' num2str(i) ',  k=' num2str(k) ', Nb of clusters: ' num2str(length(ind))]);
-    xlabel('X');
-    ylabel('Y');
-    xlim([-1 1]*20);
-    ylim([-1 1]*20);
-    %pause(.01)
-
-    save_plot=true;
-    if (save_plot)
-        name=sprintf('output/image%04i.jpg', i);
-        disp(name);
-        print(name, '-djpg');
     end
 end

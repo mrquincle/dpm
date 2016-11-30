@@ -98,12 +98,12 @@ function c_st = gibbsDPM_algo8(y, hyperG0, alpha, niter, doPlot)
             m(c(k)) = m(c(k)) + 1;
 
             if doPlot==1
-                some_plot(y, hyperG0, U_R, m, c, k, i, cmap)
+                plot_assignments(y, hyperG0, U_R, m, c, k, i, cmap)
             end
         end
 
         if doPlot==2
-            some_plot(y, hyperG0, U_R, m, c, k, i, cmap)
+            plot_assignments(y, hyperG0, U_R, m, c, k, i, cmap)
         end
     
         printf("Number of customers at each table [step %i]:\n", i);
@@ -123,7 +123,7 @@ function c_st = gibbsDPM_algo8(y, hyperG0, alpha, niter, doPlot)
         end
 
         if doPlot==2
-            some_plot(y, hyperG0, U_R, m, c, k, i, cmap)
+            plot_assignments(y, hyperG0, U_R, m, c, k, i, cmap)
         end
 
         print_clusters=true;
@@ -177,22 +177,28 @@ function [dR] = update_c(m, alpha, z, hyperG0, U_R, c)
     cind=find(m);
     % copy to result vector (will be overwritten in accept-reject step)
     dR = U_R;
-    
-    % Print current table indices
-    cind
-    
-    % Print likelihood before we start updating
-%    L = likelihoods(hyperG0.prior, repmat(z, 1, length(cind)), dR(cind) )
 
-    print_struct_array_contents(true);
-    dS = dR(cind);
-    %disp_R = dR(cind);
-    %rmfield(disp_R, 'a');
-    %rmfield(disp_R, 'b');
-    dT.mu = [dS.mu1; dS.mu2]';
-    dT.kappa = [dS.kappa1; dS.kappa2]';
-    dT.weights = [dS.weights0; dS.weights1; dS.weights2]';
-    dT
+    print_verbose = false;
+
+    if print_verbose
+        % Print current table indices
+        cind
+        
+        % Print likelihood before we start updating
+    %    L = likelihoods(hyperG0.prior, repmat(z, 1, length(cind)), dR(cind) )
+
+        print_struct_array_contents(true);
+        dS = dR(cind);
+        %disp_R = dR(cind);
+        %rmfield(disp_R, 'a');
+        %rmfield(disp_R, 'b');
+
+        % structure of dS is not necessary DPM_Seg related!
+        dT.mu = [dS.mu1; dS.mu2]';
+        dT.kappa = [dS.kappa1; dS.kappa2]';
+        dT.weights = [dS.weights0; dS.weights1; dS.weights2]';
+        dT
+    end
 
     % Number of MH steps
     for tt=1:100
@@ -261,14 +267,23 @@ function total_likelihood(m, z, likelihood_type, U_R, c)
     % get non-empty tables
     cind=find(m);
 
+    % go through every non-empty table
     for i = 1:length(cind)
+        % get table index
         j = cind(i);
-        cust=find(c == j);
+        % get customers at that table
+        cust = find(c == j);
+
+        % a set observations
+        z_set = z(:, cust);
+
+%        disp("Set of observations:");
+ %       disp(z_set);
 
         % Calculate likelihood for every cluster (a cluster is multimodal pdf)
-        L(i) = prod(likelihoods(likelihood_type, z(:,cust), U_R(j) ));
+        L(i) = prod(likelihoods(likelihood_type, z_set, U_R(j) ));
     end
-    L
+ %   L
    
     [Lmax, Li ] = maximum(L, 2);
 
@@ -286,10 +301,12 @@ function total_likelihood(m, z, likelihood_type, U_R, c)
         observations_at_this_table = z(:,cust);
         parameters = U_R(j);
         likelihoods_at_this_table = likelihoods(likelihood_type, z(:,cust), U_R(j));
-        
+ 
+        disp("Display cluster, likelihood, and particular table");
         disp(cluster);
         disp(likelihood);
         disp(table);
+        disp("Display observations, parameters, and likelihoods at this table");
         disp(observations_at_this_table);
         disp(parameters);
         disp(likelihoods_at_this_table);
@@ -307,7 +324,11 @@ function Rout = brownian(R, prior)
     switch(prior)
     case { 'NIW', 'NIG' }
         Rout.mu = R.mu + normrnd(0,1,size(R.mu));
-        Rout.Sigma = R.Sigma + normrnd(0,1,size(R.Sigma));
+        err = 2;
+        while err
+            Rout.Sigma = R.Sigma + normrnd(0,1,size(R.Sigma));
+            [~, err] = chol(Rout.Sigma);
+        end
     case 'DPM_Seg'
         Rout.mu = R.mu + normrnd(0,1,size(R.mu));
         Rout.Sigma = R.Sigma + normrnd(0,1,size(R.Sigma));
@@ -403,58 +424,3 @@ function [K, update, R] = sample_c(m, alpha, z, hyperG0, U_R)
     end
 end
 
-% Plot mean values
-function some_plot(z, hyperG0, U_R, m, c, k, i, cmap)
-    switch (hyperG0.prior)
-    case { 'NIG', 'DPM_Seg' }
-        z=z(2:end,:);
-    end
-    ind=find(m);
-    hold off;
-    for j=1:length(ind)
-        color=cmap(mod(5*ind(j),63)+1,:);
-        mu = U_R(ind(j)).mu;
-
-        switch (hyperG0.prior)
-        case { 'DPM_Seg' }
-            x_a(j) = U_R(ind(j)).a;
-            x_b(j) = U_R(ind(j)).b;
-        otherwise
-            x_a(j)=-25;
-            x_b(j)=+25;
-        end
-        y_a(j) = [1 x_a(j)]*mu;
-        y_b(j) = [1 x_b(j)]*mu;
-        plot([x_a(j) x_b(j)], [y_a(j) y_b(j)], '-', 'color', color, 'linewidth', 5);
-        hold on
-        switch (hyperG0.prior)
-        case { 'DPM_Seg' }
-            plot(x_a(j), y_a(j), '.', 'color',color, 'markersize', 30);
-            plot(x_a(j), y_a(j), 'ok', 'linewidth', 2, 'markersize', 10);
-            plot(x_b(j), y_b(j), '.', 'color',color, 'markersize', 30);
-            plot(x_b(j), y_b(j), 'ok', 'linewidth', 2, 'markersize', 10);
-        end
-        plot(z(1,c==ind(j)),z(2,c==ind(j)),'.','color',color, 'markersize', 15);
-        cust=find(c == ind(j));
-        for f = 1:length(cust)
-          plot([x_a(j) z(1,cust(f))],[y_a(j) z(2,cust(f))], '-', 'color', color);
-          plot([x_b(j) z(1,cust(f))],[y_b(j) z(2,cust(f))], '-', 'color', color);
-        end
-    end
-    plot(z(1,k),z(2,k),'or', 'linewidth', 3)
-    title(['i=' num2str(i) ',  k=' num2str(k) ', Nb of clusters: ' num2str(length(ind))]);
-    xlabel('X');
-    ylabel('Y');
-    %y_max=max([z(2,:),y_a,y_b, 25]);
-    %y_min=min([z(2,:),y_a,y_b, -25]);
-    %x_max=max([z(1,:),x_a,x_b, 25]);
-    %x_min=min([z(1,:),x_a,x_b, -25]);
-    y_max = 25;
-    y_min = -25;
-    x_max = 25;
-    x_min = -25;
-    xlim([x_min x_max]);
-    ylim([y_min y_max]);
-
-    pause(.01)
-end

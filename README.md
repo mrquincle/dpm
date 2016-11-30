@@ -4,5 +4,7 @@ Check [Inference README](inference/README.md).
 
 # Copyrights
 
-Anne C. van Rossum
-Rotterdam
+Author:
+
+* Anne C. van Rossum
+* Rotterdam

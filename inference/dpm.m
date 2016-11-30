@@ -113,6 +113,7 @@ case 'many-modal'
 	type_prior=prior{1};
 	niter = 100;
 	findMAP = 0;
+%	doPlot = 0;
 	remove_last_item = false;
 	prepend_constant = false;
 
@@ -150,6 +151,7 @@ algorithm = {'BMQ'; 'CRP'; 'collapsedCRP'; 'slicesampler'; 'auxiliaryvars'};
 type_algo = algorithm{5};
 %type_algo = algorithm{1};
 type_algo = algorithm{2};
+type_algo = algorithm{5};
 fprintf('Use algorithm ''%s''\n', type_algo);
 
 
@@ -308,6 +310,8 @@ for f = 1:length(fileList)
 	R=[c_est ground_truth];
 	% use standard metrics to check the performance of the assignment
 	[AR,RI,MI,HI]=RandIndex(R(:,1), R(:,2));
+
+	disp("Display AR, RI, MI, and HI metrics");
 	disp(AR);
 	disp(RI);
 	disp(MI);
