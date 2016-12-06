@@ -234,10 +234,10 @@ for f = 1:length(fileList)
 	case 'NIW'
 		hyperG0.prior = type_prior;
 		% using column-vectors
-		hyperG0.mu = [0;0];
+		hyperG0.mu = [5;5];
 		hyperG0.kappa = 1;
 		hyperG0.nu = 4;
-		hyperG0.lambda = eye(2);
+		hyperG0.lambda = eye(2)/100;
 	case 'NIG'
 		hyperG0.prior = type_prior;
 		% this mean is used as prior for the coefficients for a line, 0, 0 means a horizontal line through the origin

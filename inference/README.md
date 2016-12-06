@@ -33,6 +33,13 @@ Our example is similar, but for 100 of these distributions, with Sigma homogenou
 pi = sum_{i=1}^100 N(f_i(mu), Sigma)
 ```
 
+The approaches to cope with multimodality:
+
+1. Wang-Laundau sampler. A few directions of meta-stability are defined beforehand. It is biasing the potential.
+
+2. Equi-Energy sampler. These are tempering methods.
+
+
 # Conventions
 
 Due to idiosyncrasies of octave/matlab the code gravitated towards the following conventions:

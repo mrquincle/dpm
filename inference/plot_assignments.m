@@ -1,5 +1,5 @@
 % Plot mean values
-function plot_assignments(z, hyperG0, U_R, m, c, k, i, cmap)
+function plot_assignments(z, hyperG0, U_R, m, c, k, i, cmap, L)
     switch (hyperG0.prior)
     case { 'NIG', 'DPM_Seg' }
         z=z(2:end,:);
@@ -38,7 +38,12 @@ function plot_assignments(z, hyperG0, U_R, m, c, k, i, cmap)
             plot(x_b(j), y_b(j), '.', 'color',color, 'markersize', 30);
             plot(x_b(j), y_b(j), 'ok', 'linewidth', 2, 'markersize', 10);
         case 'NIW'
-            plot(mu(1), mu(2), '.', 'color', color, 'markersize', 30);
+            if (exist("L") == 1)
+                ms = min(L(j) * 5, 100);
+            else
+                ms = 30;
+            end
+            plot(mu(1), mu(2), '.', 'color', color, 'markersize', ms);
             plot(mu(1), mu(2), 'ok', 'linewidth', 2, 'markersize', 10);
         end
         
@@ -58,14 +63,9 @@ function plot_assignments(z, hyperG0, U_R, m, c, k, i, cmap)
     title(['i=' num2str(i) ',  k=' num2str(k) ', Nb of clusters: ' num2str(length(ind))]);
     xlabel('X');
     ylabel('Y');
-    %y_max=max([z(2,:),y_a,y_b, 25]);
-    %y_min=min([z(2,:),y_a,y_b, -25]);
-    %x_max=max([z(1,:),x_a,x_b, 25]);
-    %x_min=min([z(1,:),x_a,x_b, -25]);
-    y_max = 25;
-    y_min = -25;
-    x_max = 25;
-    x_min = -25;
+    
+    x_max = 12; x_min = 0;
+    y_max = 12; y_min = 0;
     xlim([x_min x_max]);
     ylim([y_min y_max]);
 
