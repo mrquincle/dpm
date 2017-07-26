@@ -10,8 +10,14 @@
 %     * T.d2: end of line segment (scalar)
 % -- Function: [x y] = angularrnd(S, T, N)
 %     Return N samples, see angularrnd(S, T)
-
-function [x y] = angularrnd(S, T, N)
+%
+%     Example: 
+%       [x,y,E0,E1]=angularrnd(S,T,N);
+%       plot(x,y,'bo');
+%       hold on
+%       E=[E0;E1];
+%       plot(E(:,1),E(:,2),'r-');
+function [x y E0 E1] = angularrnd(S, T, N)
     if ~exist('N','var')
         N=1;
     end
@@ -34,8 +40,13 @@ function [x y] = angularrnd(S, T, N)
 
     % Sum them to get the points
     P = P0 + P1 + P2;
+   
+    % Also calculate end points of line
+    E0 = [T.d1*-sin(T.theta) T.d1*cos(T.theta)] + LP;
+    E1 = [T.d2*-sin(T.theta) T.d2*cos(T.theta)] + LP;
 
     % Return values
     x = P(:, 1);
     y = P(:, 2);
+
 end

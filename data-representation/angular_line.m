@@ -35,6 +35,7 @@ p=unifrnd(-10,10);
 
 % noise
 sigma=0.1;
+sigma=0.001;
 % endpoints of the segment
 d1=5; % travel d1 over line from LP, this is endpoint 1
 d2=8; % travel d2 over line from LP, this is endpoint 2
@@ -68,13 +69,17 @@ T.theta = theta;
 T.p = p;
 T.d1 = d1;
 T.d2 = d2;
-[x y] = angularrnd(S, T, N);
+[x y, E0, E1] = angularrnd(S, T, N);
 
 if (fig1)
     figure(1);
-    plot(x,y, 'g.');
+    plot(x,y, 'go');
+    hold on;
+    E=[E0; E1];
+    plot(E(:,1),E(:,2),'r-');
     axis("square");
     axis("equal");
+    hold off;
 end
 
 % the slope and the intercept themselves do not come from a distribution
@@ -107,6 +112,14 @@ lnorm = ll/mm;
 % it is consequently a bit lower, at around 4.9, it doesn't matter what theta is
 % remarkably with p=-5 it is at around -5.1 so also shifted with 0.1 down
 % this is even the case with 0, so probably I've made a mistake somewhere
+
+% This is not incorrect. Check two points. If we draw a line through it with different origin-distances and angles
+% we will find a nice periodic pattern. This is because even the origin-distance increases, the angle increases as 
+% well, compensating for the overall line fit. 
+%
+% If we want to have a single peak we can bring down the noise, with sigma=0.001 you will have a single peak.
+% You can also increase the number of points, although check if values are not clipping to infinity.
+%
 if (fig2)
     figure(2)
     surf(theta_arr,p_arr,lnorm(c_i,c_j))
