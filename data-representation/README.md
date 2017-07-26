@@ -35,6 +35,7 @@ If we rotate in 3D we have:
 
     R3z, R3y, and R3x, the Euler rotation matrices.
     p = [x; y; z]
+    q = R3z * R3y * p;
     L = || q(2) + q(3) ||_2
 
 These different rotations can be played with using `test_lines.m`.
