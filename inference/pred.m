@@ -30,8 +30,8 @@ function out = pred(z, S)
 		S = lambda0*(kappa0+1)/kappa0/(nu0-p+1);
 		nu = nu0-p+1;
 		out = (1+(z-mu0)'*S^-1*(z-mu0)/nu)^(-(nu+p)/2)*...
-			exp(gammaln((nu+p)/2))/exp(gammaln((nu)/2))*...
-			(det(nu*p*S))^-.5;
+			exp(gammaln((nu+p)/2)-gammaln((nu)/2))*...
+			(det(nu*pi*S))^-.5;
 	case 'NIG'
 		% p(z*|Z) = Student_nu(X*mu, b/a(I + X Gamma^-1 X))
 		% all z are summarized through sufficient statistics, so we need only
